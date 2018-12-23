@@ -14,7 +14,7 @@ public class RenderEllipsoid : MonoBehaviour
     {
 		transform.localScale = Extents;
 		rb = GetComponent<Rigidbody>();
-		//rb.angularVelocity = Omega;
+		rb.angularVelocity = Omega;
 
 		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
 
@@ -23,7 +23,6 @@ public class RenderEllipsoid : MonoBehaviour
 										(Extents.x * Extents.x + Extents.z * Extents.z) * 1 / 5
 										);
 
-		rb.AddTorque(Omega * 100);
 	}
 
     // Update is called once per frame
