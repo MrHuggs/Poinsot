@@ -5,25 +5,21 @@ using UnityEngine;
 public class ShowOmega : MonoBehaviour
 {
 	public GameObject Target;
-	Rigidbody TargetBody;
+	PRigidBody TargetBody;
     // Start is called before the first frame update
     void Start()
     {
-		TargetBody = Target.GetComponent<Rigidbody>();
-
+		TargetBody = Target.GetComponent<PRigidBody>();
 	}
 
-    // Update is called once per frame
-    void Update()
+	// Update is called once per frame
+	void Update()
     {
 		transform.position = Target.transform.position;
 
-		var w = TargetBody.angularVelocity;
-		
 		Quaternion q = new Quaternion();
-		q.SetFromToRotation(Vector3.up, TargetBody.angularVelocity);
+		q.SetFromToRotation(Vector3.up, TargetBody.Omega);
 
 		transform.rotation = q;
-
 	}
 }
