@@ -11,15 +11,18 @@ public class PRigidBody : MonoBehaviour
 	public Vector3 Omega;
 
 	// Diagonal values of the interia tensor:
-	Vector3 Inertia;
+	[HideInInspector]
+	public Vector3 Inertia;
 
 	// Conserved values:
-	Vector3 AngularMomentum;
-	float Energy;
+	[HideInInspector]
+	public Vector3 AngularMomentum;
+	[HideInInspector]
+	public float Energy;
 
 	// Body --> World
-	Quaternion Orientation;
-
+	[HideInInspector]
+	public Quaternion Orientation;
 	
 	void UpdateOrientation(float dt)
 	{
@@ -51,17 +54,33 @@ public class PRigidBody : MonoBehaviour
 		Omega = Orientation * body_omega;
 	}
 
+	private void Awake()
+	{
+		transform.localScale = Extents;
+
+		Orientation = Quaternion.identity;
+
+		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
+		Inertia = new Vector3((Extents.y * Extents.y + Extents.z * Extents.z) * 1 / 5,
+							  (Extents.x * Extents.x + Extents.z * Extents.z) * 1 / 5,
+							  (Extents.x * Extents.x + Extents.y * Extents.y) * 1 / 5
+							  );
+
+
+		// Intially the body and world coordinates match:
+		AngularMomentum.x = Inertia.x * Omega.x;
+		AngularMomentum.y = Inertia.y * Omega.y;
+		AngularMomentum.z = Inertia.z * Omega.z;
+
+		Energy = Vector3.Dot(AngularMomentum, Omega) * .5f;
+
+		Debug.Log(string.Format("Initial L {0} E {1}", AngularMomentum, Energy));
+	}
+
 	// Start is called before the first frame update
 	void Start()
     {
 		transform.localScale = Extents;
-
-		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
-		Inertia = new Vector3((Extents.y * Extents.y + Extents.z * Extents.z) * 1 / 5,
-										(Extents.x * Extents.x + Extents.z * Extents.z) * 1 / 5,
-										(Extents.x * Extents.x + Extents.z * Extents.z) * 1 / 5
-										);
-
 
 		Orientation = Quaternion.identity;
 
@@ -73,6 +92,7 @@ public class PRigidBody : MonoBehaviour
 		Energy = Vector3.Dot(AngularMomentum, Omega) * .5f;
 
 		Debug.Log(string.Format("Initial L {0} E {1}", AngularMomentum, Energy));
+		ShowParms();
 	}
 
 	private void ShowParms()
@@ -87,7 +107,10 @@ public class PRigidBody : MonoBehaviour
 		var e = Vector3.Dot(body_l, body_omega) * .5f;
 
 		Vector3 l = Orientation * body_l;
-		Debug.Log(string.Format("L {0} E {1}", l, e));
+		float l2 = Vector3.Dot(body_l, body_l);
+
+
+		Debug.Log(string.Format("L {0} L^2 {1} E {2}", l, l2, e));
 	}
 
 	private void Normalize()
@@ -124,7 +147,7 @@ public class PRigidBody : MonoBehaviour
 			UpdateOrientation(target_dt);
 		}
 		Normalize();
-		ShowParms();
+		//ShowParms();
 	}
 
 	// Update is called once per frame
