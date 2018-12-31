@@ -10,6 +10,8 @@ public class PRigidBody : MonoBehaviour
 	// Angular velocity (world) coordinates:
 	public Vector3 Omega;
 
+	public bool ApplyAdjustment;
+
 	// Diagonal values of the interia tensor:
 	[HideInInspector]
 	public Vector3 Inertia;
@@ -23,6 +25,24 @@ public class PRigidBody : MonoBehaviour
 	// Body --> World
 	[HideInInspector]
 	public Quaternion Orientation;
+
+	public Vector3 GetBodyOmega()
+	{
+		var ir = Quaternion.Inverse(Orientation);
+		var body_omega = ir * Omega;
+		return body_omega;
+	}
+
+	public Vector3 GetBodyAngularMomentum()
+	{
+		var body_omega = GetBodyOmega();
+		Vector3 body_l = new Vector3();
+		body_l.x = body_omega.x * Inertia.x;
+		body_l.y = body_omega.y * Inertia.y;
+		body_l.z = body_omega.z * Inertia.z;
+
+		return body_l;
+	}
 	
 	void UpdateOrientation(float dt)
 	{
@@ -33,6 +53,21 @@ public class PRigidBody : MonoBehaviour
 		var inc = Quaternion.AngleAxis(w * dt, axis);
 
 		Orientation = inc * Orientation;
+	}
+
+	float EnergyFromOrientation(Quaternion o)
+	{
+		var ir = Quaternion.Inverse(o);
+
+		Vector3 body_l = ir * AngularMomentum;
+
+		float e = body_l.x * body_l.x / Inertia.x +
+				  body_l.y * body_l.y / Inertia.y +
+				  body_l.z * body_l.z / Inertia.z;
+
+		e *= .5f;
+
+		return e;
 	}
 
 	void UpdateOmega(float dt)
@@ -66,7 +101,6 @@ public class PRigidBody : MonoBehaviour
 							  (Extents.x * Extents.x + Extents.y * Extents.y) * 1 / 5
 							  );
 
-
 		// Intially the body and world coordinates match:
 		AngularMomentum.x = Inertia.x * Omega.x;
 		AngularMomentum.y = Inertia.y * Omega.y;
@@ -83,13 +117,7 @@ public class PRigidBody : MonoBehaviour
 		transform.localScale = Extents;
 
 		Orientation = Quaternion.identity;
-
-		// Intially the body and world coordinates match:
-		AngularMomentum.x = Inertia.x * Omega.x;
-		AngularMomentum.y = Inertia.y * Omega.y;
-		AngularMomentum.z = Inertia.z * Omega.z;
-
-		Energy = Vector3.Dot(AngularMomentum, Omega) * .5f;
+		Energy = EnergyFromOrientation(Orientation);
 
 		Debug.Log(string.Format("Initial L {0} E {1}", AngularMomentum, Energy));
 		ShowParms();
@@ -97,20 +125,70 @@ public class PRigidBody : MonoBehaviour
 
 	private void ShowParms()
 	{
-		var ir = Quaternion.Inverse(Orientation);
-		var body_omega = ir * Omega;
-		Vector3 body_l = new Vector3();
-		body_l.x = body_omega.x * Inertia.x;
-		body_l.y = body_omega.y * Inertia.y;
-		body_l.z = body_omega.z * Inertia.z;
+		var body_omega = GetBodyOmega();
+		var body_l = GetBodyAngularMomentum();
 
 		var e = Vector3.Dot(body_l, body_omega) * .5f;
 
 		Vector3 l = Orientation * body_l;
 		float l2 = Vector3.Dot(body_l, body_l);
 
-
 		Debug.Log(string.Format("L {0} L^2 {1} E {2}", l, l2, e));
+	}
+
+	const float AdjustAngle = .05f;
+	static Quaternion[] Adjustments =
+	{
+			Quaternion.AngleAxis(AdjustAngle, Vector3.left),
+			Quaternion.AngleAxis(AdjustAngle, Vector3.up),
+			Quaternion.AngleAxis(AdjustAngle, Vector3.forward)
+	};
+
+
+	static Vector3[] AdjustmentDirs =
+	{
+			Vector3.left,
+			Vector3.up,
+			Vector3.forward
+	};
+
+	private void AdjustOrientation()
+	{
+		float ecur = EnergyFromOrientation(Orientation);
+		float del = Energy - ecur;
+
+		if (Mathf.Abs(del) < Energy * .001f)
+			return;
+
+		float dm = 0;
+		float delbest = 0;
+		int ibest = 0;
+		for (int im = 0; im < Adjustments.Length; im++)
+		{
+			var o = Adjustments[im] * Orientation;
+			var ep = EnergyFromOrientation(o);
+			var cd = ep - ecur;
+			if (Mathf.Abs(cd) > dm)
+			{
+				ibest = im;
+				delbest = cd;
+				dm = Mathf.Abs(cd);
+			}
+		}
+
+		float factor = del / delbest;
+		factor = Mathf.Clamp(factor, -4, 4);
+		float angle = AdjustAngle * factor;
+
+		var adjust = Quaternion.AngleAxis(angle, AdjustmentDirs[ibest]);
+
+		var _Orientation = adjust * Orientation;
+
+		float ef = EnergyFromOrientation(_Orientation);
+		float delf = Energy - ef;
+
+		if (ApplyAdjustment)
+			Orientation = _Orientation;
 	}
 
 	private void Normalize()
@@ -128,14 +206,9 @@ public class PRigidBody : MonoBehaviour
 		body_omega.y = body_l.y / Inertia.y;
 		body_omega.z = body_l.z / Inertia.z;
 
-		// Scale angular velocity to preserve kinetic energy:
-		var cur_energy = Vector3.Dot(body_l, body_omega) * .5f;
+		Omega = Orientation * body_omega;
 
-		var sf = Mathf.Sqrt(Energy / cur_energy);
-		body_omega *= sf;
-
-		var corrected_omega = Orientation * body_omega;
-		Omega = corrected_omega;
+		AdjustOrientation();
 	}
 
 	private void FixedUpdate()
@@ -147,7 +220,7 @@ public class PRigidBody : MonoBehaviour
 			UpdateOrientation(target_dt);
 		}
 		Normalize();
-		//ShowParms();
+		ShowParms();
 	}
 
 	// Update is called once per frame
