@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class IntersectionEllipsoid : MonoBehaviour
 {
-	public void SetInertia(Vector3 inertia)
+	public void SetInertia(Vector3 I)
 	{
-		transform.localScale = inertia * 2;
-		Debug.Log(string.Format("Ellipsoid extents st to {0}", inertia));
+		transform.localScale = I * 2;
+		Debug.Log(string.Format("Ellipsoid extents st to {0}", I));
 	}
 
     // Start is called before the first frame update

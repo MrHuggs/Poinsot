@@ -18,7 +18,7 @@ public class FollowAngularMomentum : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		var body_l = Target.GetBodyAngularMomentum();
+		var body_l = Target.BodyL();
 		var offset = body_l * Scale;
 
 		transform.localPosition = offset;			

@@ -8,31 +8,32 @@ public class BinetSetup : MonoBehaviour
 
 	public GameObject TargetBody;
 
-	GameObject EnergySphere;
+	GameObject MomentumSphere;
 	IntersectionEllipsoid IntersectionEllipsoid;
 	FollowAngularMomentum FollowAngularMomentum;
-	GameObject BinetCamera;
+	BinetCamera BinetCamera;
 
 	// Start is called before the first frame update
 	void Start()
     {
 		PRigidBody body = TargetBody.GetComponent<PRigidBody>();
 
-		EnergySphere = transform.Find("EnergySphere").gameObject;
+		MomentumSphere = transform.Find("MomentumSphere").gameObject;
 		IntersectionEllipsoid = transform.Find("IntersectionEllipsoid").gameObject.GetComponent<IntersectionEllipsoid>();
 		FollowAngularMomentum = transform.Find("FollowAngularMomentum").gameObject.GetComponent<FollowAngularMomentum>();
 
-		float m2 = Vector3.Dot(body.AngularMomentum, body.AngularMomentum);
+		float m2 = Vector3.Dot(body.L, body.L);
 		float scale = 2 * body.Energy / m2;
 
-		Debug.Log(string.Format("Energy: {0} Momentum {1} Scale {2} Inertia Tensor {3}", body.Energy, m2, scale, body.Inertia));
+		Debug.Log(string.Format("Energy: {0} Momentum {1} Scale {2} Inertia Tensor {3}", body.Energy, m2, scale, body.I));
 
-		IntersectionEllipsoid.SetInertia(body.Inertia * scale);
+		IntersectionEllipsoid.SetInertia(body.I * scale);
 
 		FollowAngularMomentum.Target = body;
 		FollowAngularMomentum.Scale = 1 / Mathf.Sqrt(m2);
 
-		BinetCamera = transform.Find("BinetCamera").gameObject;
+		BinetCamera = transform.Find("BinetCamera").gameObject.GetComponent<BinetCamera>();
+		BinetCamera.SetTargets(MomentumSphere, body);
 	}
 
 	// Update is called once per frame
