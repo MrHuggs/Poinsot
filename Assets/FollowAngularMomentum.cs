@@ -10,10 +10,9 @@ public class FollowAngularMomentum : MonoBehaviour
 	[HideInInspector]
 	public float Scale;
 
-    void Start()
+	void Start()
     {
-        
-    }
+	}
 
     // Update is called once per frame
     void Update()
@@ -21,6 +20,6 @@ public class FollowAngularMomentum : MonoBehaviour
 		var body_l = Target.BodyL();
 		var offset = body_l * Scale;
 
-		transform.localPosition = offset;			
+		transform.localPosition = offset;
 	}
 }

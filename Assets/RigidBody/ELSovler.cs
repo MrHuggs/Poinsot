@@ -127,8 +127,8 @@ public class ELSolver
 			float ecur_f = EnergyFromOrientation(cur);
 			float del_f = Energy - ecur_f;
 
-			Debug.Log(string.Format("ELSolver changed del from {0} to {1} out of {2} in {3} iter.",
-						del_i, del_f, Energy, niter));
+			//Debug.Log(string.Format("ELSolver changed del from {0} to {1} out of {2} in {3} iter.",
+			//			del_i, del_f, Energy, niter));
 		}
 
 

@@ -9,7 +9,7 @@ public class BinetSetup : MonoBehaviour
 	public GameObject TargetBody;
 
 	GameObject MomentumSphere;
-	IntersectionEllipsoid IntersectionEllipsoid;
+	GameObject EnergyEllipsoid;
 	FollowAngularMomentum FollowAngularMomentum;
 	BinetCamera BinetCamera;
 
@@ -19,7 +19,7 @@ public class BinetSetup : MonoBehaviour
 		PRigidBody body = TargetBody.GetComponent<PRigidBody>();
 
 		MomentumSphere = transform.Find("MomentumSphere").gameObject;
-		IntersectionEllipsoid = transform.Find("IntersectionEllipsoid").gameObject.GetComponent<IntersectionEllipsoid>();
+		EnergyEllipsoid = transform.Find("EnergyEllipsoid").gameObject;
 		FollowAngularMomentum = transform.Find("FollowAngularMomentum").gameObject.GetComponent<FollowAngularMomentum>();
 
 		float m2 = Vector3.Dot(body.L, body.L);
@@ -27,7 +27,7 @@ public class BinetSetup : MonoBehaviour
 
 		Debug.Log(string.Format("Energy: {0} Momentum {1} Scale {2} Inertia Tensor {3}", body.Energy, m2, scale, body.I));
 
-		IntersectionEllipsoid.SetInertia(body.I * scale);
+		EnergyEllipsoid.transform.localScale = body.I * scale * 2;
 
 		FollowAngularMomentum.Target = body;
 		FollowAngularMomentum.Scale = 1 / Mathf.Sqrt(m2);
