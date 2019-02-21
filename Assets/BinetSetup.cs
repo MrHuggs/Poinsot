@@ -22,12 +22,25 @@ public class BinetSetup : MonoBehaviour
 		EnergyEllipsoid = transform.Find("EnergyEllipsoid").gameObject;
 		FollowAngularMomentum = transform.Find("FollowAngularMomentum").gameObject.GetComponent<FollowAngularMomentum>();
 
+		// The overall scale of the display is set so that |L| = 1.
 		float m2 = Vector3.Dot(body.L, body.L);
-		float scale = 2 * body.Energy / m2;
+		float E = body.Energy;
 
-		Debug.Log(string.Format("Energy: {0} Momentum {1} Scale {2} Inertia Tensor {3}", body.Energy, m2, scale, body.I));
+		Debug.Log(string.Format("Energy: {0} Momentum {1}", E, m2));
 
-		EnergyEllipsoid.transform.localScale = body.I * scale * 2;
+		// For given Lx, Ly, Lz, the energy is:
+		//        Lx^2   Ly^2   Lz^2
+		//  2E =  ---- + ---- +	----
+		//        Ix	 Iy		Iz
+		// Applying our scale, and turning this into an ellipsoid equation gives the following ellipse extents:
+		Vector3 ellipsoid_scale = new Vector3(Mathf.Sqrt(E * body.I.x * 2 / m2),
+											  Mathf.Sqrt(E * body.I.y * 2 / m2),
+											  Mathf.Sqrt(E * body.I.z * 2 / m2));
+
+		Debug.Log(string.Format("Ellipsoid scale: {0},{1},{2}", ellipsoid_scale.x, ellipsoid_scale.y , ellipsoid_scale.z));
+
+		// Need another factor of 2 in the final scale because a standard Unity sphere is radius .5:
+		EnergyEllipsoid.transform.localScale = ellipsoid_scale * 2;
 
 		FollowAngularMomentum.Target = body;
 		FollowAngularMomentum.Scale = 1 / Mathf.Sqrt(m2);

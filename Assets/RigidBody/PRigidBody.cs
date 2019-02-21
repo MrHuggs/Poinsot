@@ -89,6 +89,8 @@ public class PRigidBody : MonoBehaviour
 							  (Extents.x * Extents.x + Extents.y * Extents.y) * 1 / 5
 							  );
 
+		Debug.Log(string.Format("Inertia Values: ({0},{1},{2})", I.x, I.y, I.z));
+
 		// Intially the body and world coordinates match:
 		L.x = I.x * Omega.x;
 		L.y = I.y * Omega.y;
@@ -123,7 +125,7 @@ public class PRigidBody : MonoBehaviour
 		Vector3 l = Orientation * body_l;
 		float l2 = Vector3.Dot(body_l, body_l);
 
-		Debug.Log(string.Format("L {0} L^2 {1} E {2}", l, l2, e));
+		Debug.Log(string.Format("L={0} L^2={1} |L|={2} E={3}", l, l2, Mathf.Sqrt(l2), e));
 	}
 
 	private void Normalize()

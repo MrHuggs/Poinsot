@@ -57,7 +57,7 @@ public class ELSolver
 	};
 
 	// Perform a single iteration: Find the energy delta, measure the gradient WRT
-	// each perturbation. Find the one with the largest affect and apply a scaled adjustment
+	// each perturbation. Find the one with the largest effect and apply a scaled adjustment
 	// to the orientation.
 	//
 	Quaternion Interate(Quaternion cur_orientation)
