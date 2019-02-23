@@ -6,11 +6,16 @@ public class PoinsotSetup : MonoBehaviour
 {
 	public PRigidBody Body;
 
+	Vector3 L_dir;
+	float MasterScale;
+
 	GameObject UpperPlane;
 	GameObject LowerPlane;
 
 	GameObject AngularMomentum;
 	GameObject AngularVelocity;
+
+	GameObject AngularVelocityTrail;
 
 	GameObject InertiaEllipsoid;
 
@@ -21,13 +26,18 @@ public class PoinsotSetup : MonoBehaviour
 		LowerPlane = transform.Find("LowerPlane").gameObject;
 
 		AngularMomentum = transform.Find("AngularMomentum").gameObject;
+
 		AngularVelocity = transform.Find("AngularVelocity").gameObject;
+		AngularVelocityTrail = transform.Find("AngularVelocityTrail").gameObject;
 
 		InertiaEllipsoid = transform.Find("InertiaEllipsoid").gameObject;
 
+		L_dir = Body.L.normalized;
+		MasterScale = Vector3.Dot(L_dir, Body.Omega);
+		Debug.Log(string.Format("MasterScale {0}", MasterScale));
+
 		OrientPlanes();
 		PositionPlanes();
-
 	}
 
 	void OrientPlanes()
@@ -46,19 +56,15 @@ public class PoinsotSetup : MonoBehaviour
 
 	void PositionPlanes()
 	{
-		var L_dir = Body.L.normalized;
 
-		float omega_projection = Vector3.Dot(L_dir, Body.Omega);
-
-		Debug.Log(string.Format("omega_projection {0}", omega_projection));
 
 		Vector3 pos = new Vector3();
-		pos.y = omega_projection;
+		pos.y = MasterScale;
 
-		//UpperPlane.transform.position = pos;
+		UpperPlane.transform.localPosition = L_dir;
 
-		pos.y = -omega_projection;
-		//LowerPlane.transform.position = pos;
+		pos.y = -MasterScale;
+		LowerPlane.transform.localPosition = -L_dir;
 
 	}
 
@@ -83,6 +89,8 @@ public class PoinsotSetup : MonoBehaviour
 
 		AngularVelocity.transform.localRotation = q;
 
+		AngularVelocityTrail.transform.localPosition = Body.Omega / MasterScale;
+
 		// For a given angular velocity in body-fixed-corrdinates, the energy is:
 		// 2E = w_x^2Ix + w_y^2Iy+w_z^2I_z
 
@@ -93,10 +101,7 @@ public class PoinsotSetup : MonoBehaviour
 
 		Debug.Log(string.Format("ellipsoid_scale ({0},{1},{2})", ellipsoid_scale.x, ellipsoid_scale.y, ellipsoid_scale.z));
 
-		var L_dir = Body.L.normalized;
-		float omega_projection = Vector3.Dot(L_dir, Body.Omega);
-
-		ellipsoid_scale *= 1 / omega_projection;
+		ellipsoid_scale *= 1 / MasterScale;
 
 		InertiaEllipsoid.transform.localScale = ellipsoid_scale * 2;
 		InertiaEllipsoid.transform.rotation = Body.Orientation;
