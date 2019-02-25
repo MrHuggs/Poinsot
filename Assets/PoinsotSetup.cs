@@ -6,7 +6,11 @@ public class PoinsotSetup : MonoBehaviour
 {
 	public PRigidBody Body;
 
+	// Normalized angular velocity vector:
 	Vector3 L_dir;
+	// The Poinsot display is in angular velecity space. The scale is set so that
+	// MasterScale = 1 unit in the Unity display. The value is chose to be the projection
+	// of the angular velocity along angular momentum direction:
 	float MasterScale;
 
 	GameObject UpperPlane;
@@ -24,14 +28,12 @@ public class PoinsotSetup : MonoBehaviour
     {
 		UpperPlane = transform.Find("UpperPlane").gameObject;
 		LowerPlane = transform.Find("LowerPlane").gameObject;
-
 		AngularMomentum = transform.Find("AngularMomentum").gameObject;
-
 		AngularVelocity = transform.Find("AngularVelocity").gameObject;
 		AngularVelocityTrail = transform.Find("AngularVelocityTrail").gameObject;
-
 		InertiaEllipsoid = transform.Find("InertiaEllipsoid").gameObject;
 
+		// Calcault the mast scale based on the state of the body:
 		L_dir = Body.L.normalized;
 		MasterScale = Vector3.Dot(L_dir, Body.Omega);
 		Debug.Log(string.Format("MasterScale {0}", MasterScale));
@@ -56,16 +58,10 @@ public class PoinsotSetup : MonoBehaviour
 
 	void PositionPlanes()
 	{
-
-
-		Vector3 pos = new Vector3();
-		pos.y = MasterScale;
-
+		// The upper and low invariable planes are 1 unit along the angular momentum
+		// direction.
 		UpperPlane.transform.localPosition = L_dir;
-
-		pos.y = -MasterScale;
 		LowerPlane.transform.localPosition = -L_dir;
-
 	}
 
 	static float square(float x) { return x * x;  }

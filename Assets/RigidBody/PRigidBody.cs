@@ -53,6 +53,7 @@ public class PRigidBody : MonoBehaviour
 		// Omega is in radians/sec, but AngleAxis need degrees.
 		float w = Omega.magnitude * Mathf.Rad2Deg;
 
+		// There is a sign problem here...
 		var inc = Quaternion.AngleAxis(w * dt, axis);
 
 		Orientation = inc * Orientation;

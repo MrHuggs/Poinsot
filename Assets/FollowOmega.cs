@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ShowOmega : MonoBehaviour
+public class FollowOmega : MonoBehaviour
 {
 	public GameObject Target;
 	PRigidBody TargetBody;

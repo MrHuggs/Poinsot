@@ -10,7 +10,7 @@ public class BinetSetup : MonoBehaviour
 
 	GameObject MomentumSphere;
 	GameObject EnergyEllipsoid;
-	FollowAngularMomentum FollowAngularMomentum;
+	BinetFollowL BinetFollowL;
 	BinetCamera BinetCamera;
 
 	// Start is called before the first frame update
@@ -20,7 +20,7 @@ public class BinetSetup : MonoBehaviour
 
 		MomentumSphere = transform.Find("MomentumSphere").gameObject;
 		EnergyEllipsoid = transform.Find("EnergyEllipsoid").gameObject;
-		FollowAngularMomentum = transform.Find("FollowAngularMomentum").gameObject.GetComponent<FollowAngularMomentum>();
+		BinetFollowL = transform.Find("BinetFollowL").gameObject.GetComponent<BinetFollowL>();
 
 		// The overall scale of the display is set so that |L| = 1.
 		float m2 = Vector3.Dot(body.L, body.L);
@@ -42,8 +42,8 @@ public class BinetSetup : MonoBehaviour
 		// Need another factor of 2 in the final scale because a standard Unity sphere is radius .5:
 		EnergyEllipsoid.transform.localScale = ellipsoid_scale * 2;
 
-		FollowAngularMomentum.Target = body;
-		FollowAngularMomentum.Scale = 1 / Mathf.Sqrt(m2);
+		BinetFollowL.Target = body;
+		BinetFollowL.Scale = 1 / Mathf.Sqrt(m2);
 
 		BinetCamera = transform.Find("BinetCamera").gameObject.GetComponent<BinetCamera>();
 		BinetCamera.SetTargets(MomentumSphere, body);

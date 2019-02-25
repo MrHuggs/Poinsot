@@ -8,9 +8,21 @@ public class GetCameraName : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-		var r = transform.root;
 		var c = GetComponent<Text>();
-		c.text = r.name;
+		for (var parent = transform; ; parent = parent.parent)
+		{
+			if (parent == null)
+			{
+				c.text = "Camera not found";
+				break;
+			}
+			if (parent.GetComponent<Camera>() != null)
+			{
+				c.text = parent.name;
+				break;
+			}
+		}
+
     }
 
     // Update is called once per frame

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowAngularMomentum : MonoBehaviour
+public class BinetFollowL : MonoBehaviour
 {
 	// Start is called before the first frame update
 	[HideInInspector]
