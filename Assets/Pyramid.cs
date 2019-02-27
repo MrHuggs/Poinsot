@@ -75,37 +75,4 @@ public class Pyramid : MonoBehaviour
 		mesh.normals = normals;
 		mesh.triangles = triangles;
 	}
-
-	void _Start()
-	{
-		gameObject.AddComponent<MeshFilter>();
-
-		mesh = new Mesh();
-		GetComponent<MeshFilter>().mesh = mesh;
-		mesh.name = "Pyramid";
-
-
-		// Create a pyarmid. We need 5 verats and 6 triangles.
-		vertices = new Vector3[5];
-		vertices[0].Set(0, 1, 0);
-		vertices[1].Set(-1, 0, -1);
-		vertices[2].Set(1, 0, -1);
-		vertices[3].Set(1, 0, 1);
-		vertices[4].Set(-1, 0, 1);
-
-		// The front faces have a clockwise order in Unity.
-		triangles = new int[]
-		{
-			1, 0, 2,
-			2, 0, 3,
-			3, 0, 4,
-			4, 0, 1,
-			3, 4, 2,
-			2, 4, 1
-		};
-
-		mesh.vertices = vertices;
-		mesh.triangles = triangles;
-	}
-
 }

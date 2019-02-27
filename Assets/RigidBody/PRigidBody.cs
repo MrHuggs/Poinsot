@@ -53,7 +53,9 @@ public class PRigidBody : MonoBehaviour
 		// Omega is in radians/sec, but AngleAxis need degrees.
 		float w = Omega.magnitude * Mathf.Rad2Deg;
 
-		// There is a sign problem here...
+		// Note that in Unity, a positive angle of rotation is clockwise around the
+		// axis of rotation. This is unusual....
+
 		var inc = Quaternion.AngleAxis(w * dt, axis);
 
 		Orientation = inc * Orientation;
