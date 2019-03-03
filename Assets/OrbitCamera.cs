@@ -10,14 +10,22 @@ public class OrbitCamera : MonoBehaviour
 	public float Sensitivity = 15;
 	public float FovSensitivty = 8;
 
+	bool Orbiting;
+
 	Camera Camera;
     // Start is called before the first frame update
     void Start()
     {
 		Camera = GetComponent<Camera>();
+		Orbiting = false;
 
 		Camera.transform.LookAt(Target.transform);
     }
+
+	private void OnMouseDown()
+	{
+		Debug.Log(string.Format("On mouse down {0}", name));
+	}
 
 
 	void DoOrbit()
@@ -25,7 +33,7 @@ public class OrbitCamera : MonoBehaviour
 		var dx = Input.GetAxis("Mouse X") * Sensitivity;
 		var dy = Input.GetAxis("Mouse Y") * Sensitivity;
 
-		Debug.Log(string.Format("({0},{1})", dx, dy));
+		//Debug.Log(string.Format("({0},{1})", dx, dy));
 
 		var targ_to_cam = transform.position - Target.transform.position;
 
@@ -66,11 +74,23 @@ public class OrbitCamera : MonoBehaviour
 	// Update is called once per frame
 	void Update()
     {
-		if (Input.GetMouseButton(0))
+		if (Input.GetMouseButtonDown(0))
 		{
-			DoOrbit();
+			if (Camera.pixelRect.Contains(Input.mousePosition))
+			{
+				Orbiting = true;
+			}
+		}
+		else
+		{
+			if (Input.GetMouseButton(0) == false)
+					Orbiting = false;
 		}
 
-		DoZoom();
+		if (Orbiting)
+			DoOrbit();
+
+		if (Camera.pixelRect.Contains(Input.mousePosition))
+				DoZoom();
 	}
 }
