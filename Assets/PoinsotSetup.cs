@@ -16,31 +16,47 @@ public class PoinsotSetup : MonoBehaviour
 	GameObject UpperPlane;
 	GameObject LowerPlane;
 
-	GameObject AngularMomentum;
-	GameObject AngularVelocity;
+	Arrow L;
+	Arrow Omega;
 
 	GameObject AngularVelocityTrail;
 
 	GameObject InertiaEllipsoid;
+	GameObject Camera;
 
 	// Start is called before the first frame update
 	void Start()
     {
 		UpperPlane = transform.Find("UpperPlane").gameObject;
 		LowerPlane = transform.Find("LowerPlane").gameObject;
-		AngularMomentum = transform.Find("AngularMomentum").gameObject;
-		AngularVelocity = transform.Find("AngularVelocity").gameObject;
+		L = transform.Find("L").gameObject.GetComponent<Arrow>();
+		Omega = transform.Find("Omega").gameObject.GetComponent<Arrow>();
 		AngularVelocityTrail = transform.Find("AngularVelocityTrail").gameObject;
 		InertiaEllipsoid = transform.Find("InertiaEllipsoid").gameObject;
+		Camera = transform.Find("Camera").gameObject;
 
-		// Calcault the mast scale based on the state of the body:
+		// Calculate the master scale based on the state of the body:
 		L_dir = Body.L.normalized;
 		MasterScale = Vector3.Dot(L_dir, Body.Omega);
-		Debug.Log(string.Format("MasterScale {0}", MasterScale));
 
+		float l_length = Body.L.magnitude / MasterScale;
+		L.SetLength(l_length);
+
+		Debug.Log(string.Format("MasterScale {0}, L Length {1}", MasterScale, l_length));
+
+		//OrientCamera();
 		OrientPlanes();
 		PositionPlanes();
 	}
+
+	void OrientCamera()
+	{
+		Quaternion q = new Quaternion();
+
+		q.SetFromToRotation(Vector3.up, Body.L);
+		Camera.transform.rotation = q;
+	}
+
 
 	void OrientPlanes()
 	{
@@ -50,10 +66,11 @@ public class PoinsotSetup : MonoBehaviour
 
 		q.SetFromToRotation(Vector3.down, Body.L);
 		UpperPlane.transform.rotation = q;
-		AngularMomentum.transform.localRotation = q;
 
 		q.SetFromToRotation(Vector3.up, Body.L);
 		LowerPlane.transform.localRotation = q;
+
+		L.transform.localRotation = q;
 	}
 
 	void PositionPlanes()
@@ -64,9 +81,8 @@ public class PoinsotSetup : MonoBehaviour
 		LowerPlane.transform.localPosition = -L_dir;
 	}
 
+	// Helper for checking ellipsoid values:
 	static float square(float x) { return x * x;  }
-
-	// Update is called once per frame
 	static float EvalEllipsoid(Vector3 coordinate, Vector3 ellipse_vals)
 	{
 		float res=	square(coordinate.x / ellipse_vals.x) +
@@ -76,14 +92,14 @@ public class PoinsotSetup : MonoBehaviour
 	}
 
 
-
 	void Update()
     {
 
 		Quaternion q = new Quaternion();
 		q.SetFromToRotation(Vector3.up, Body.Omega);
 
-		AngularVelocity.transform.localRotation = q;
+		Omega.transform.localRotation = q;
+		Omega.SetLength(Body.Omega.magnitude / MasterScale);
 
 		AngularVelocityTrail.transform.localPosition = Body.Omega / MasterScale;
 
@@ -95,7 +111,7 @@ public class PoinsotSetup : MonoBehaviour
 											  Mathf.Sqrt(2 * E / Body.I.y),
 											  Mathf.Sqrt(2 * E / Body.I.z));
 
-		Debug.Log(string.Format("ellipsoid_scale ({0},{1},{2})", ellipsoid_scale.x, ellipsoid_scale.y, ellipsoid_scale.z));
+		//Debug.Log(string.Format("ellipsoid_scale ({0},{1},{2})", ellipsoid_scale.x, ellipsoid_scale.y, ellipsoid_scale.z));
 
 		ellipsoid_scale *= 1 / MasterScale;
 
@@ -104,8 +120,8 @@ public class PoinsotSetup : MonoBehaviour
 
 		PositionPlanes();
 
-		float f = EvalEllipsoid(Body.BodyOmega(), ellipsoid_scale);
-		Debug.Log(string.Format("Curr ellipse eq value: {0}", f));
+		//float f = EvalEllipsoid(Body.BodyOmega(), ellipsoid_scale);
+		//Debug.Log(string.Format("Curr ellipse eq value: {0}", f));
 
 	}
 }
