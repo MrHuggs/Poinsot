@@ -4,23 +4,30 @@ using UnityEngine;
 
 public class OrbitCamera : MonoBehaviour
 {
-	// Simple orbit camera. Implements orbit and field of view change;
+	// Simple orbit camera. Implements orbit and field of view change.
 
 	public GameObject Target;
 	public float Sensitivity = 15;
 	public float FovSensitivty = 8;
 
-	bool Orbiting;
+	// Default up vector. This is only a hint:
+	public Vector3 UpVector = Vector3.up;
 
+	// Camera we are contolling:
 	Camera Camera;
-    // Start is called before the first frame update
-    void Start()
+
+	// Internal state:
+	bool Orbiting;		// We are actively orbiting (for example, in response to mouse button down)
+	bool FirstUpdate;	// This is the first update.
+
+
+	// Start is called before the first frame update
+	void Start()
     {
 		Camera = GetComponent<Camera>();
-		Orbiting = false;
+		FirstUpdate = true;
 
-		Camera.transform.LookAt(Target.transform);
-    }
+	}
 
 	private void OnMouseDown()
 	{
@@ -74,6 +81,17 @@ public class OrbitCamera : MonoBehaviour
 	// Update is called once per frame
 	void Update()
     {
+		if (FirstUpdate)
+		{
+			FirstUpdate = false;
+
+			Orbiting = false;
+
+			// Make the camera look at the target. We delay until the first update
+			// in case the target or other parameters are changed during Start:
+			Camera.transform.LookAt(Target.transform, UpVector);
+		}
+
 		if (Input.GetMouseButtonDown(0))
 		{
 			if (Camera.pixelRect.Contains(Input.mousePosition))

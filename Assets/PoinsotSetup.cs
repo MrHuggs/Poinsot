@@ -39,22 +39,46 @@ public class PoinsotSetup : MonoBehaviour
 		L_dir = Body.L.normalized;
 		MasterScale = Vector3.Dot(L_dir, Body.Omega);
 
-		float l_length = Body.L.magnitude / MasterScale;
-		L.SetLength(l_length);
+		// The angular momentum is just a directional display, so its length is arbitrarty.
+		L.SetLength(1.5f);
 
-		Debug.Log(string.Format("MasterScale {0}, L Length {1}", MasterScale, l_length));
+		Debug.Log(string.Format("MasterScale {0},", MasterScale));
 
-		//OrientCamera();
+		OrientCamera();
 		OrientPlanes();
 		PositionPlanes();
 	}
 
 	void OrientCamera()
 	{
-		Quaternion q = new Quaternion();
+		var ctt = InertiaEllipsoid.transform.position - Camera.transform.position;
+		ctt = ctt.normalized;
 
-		q.SetFromToRotation(Vector3.up, Body.L);
-		Camera.transform.rotation = q;
+		var up = Body.L;
+		up = up - Vector3.Dot(up, ctt) * ctt;
+
+		//Camera.transform.LookAt(InertiaEllipsoid.transform, up);
+
+		Camera.GetComponent<OrbitCamera>().UpVector = up;
+		//Camera.GetComponent<OrbitCamera>().enabled = true;
+	}
+
+	void _OrientCamera()
+	{
+		var cam_dist = Camera.transform.localPosition.magnitude;
+
+		var lcs = Camera.transform.rotation * Body.L;
+		lcs.z = 0;
+
+		Quaternion q = new Quaternion();
+		q.SetFromToRotation(Vector3.up, lcs);
+		Camera.transform.localRotation = q;
+
+		var pos = q * (Vector3.back * cam_dist);
+
+		Camera.transform.localPosition = pos;
+
+		//Camera.GetComponent<OrbitCamera>().enabled = true;
 	}
 
 

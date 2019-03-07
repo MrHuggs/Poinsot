@@ -813,6 +813,7 @@ MonoBehaviour:
   Target: {fileID: 1176987002}
   Sensitivity: 15
   FovSensitivty: 8
+  UpVector: {x: 0, y: 1, z: 0}
 --- !u!1 &579156060
 GameObject:
   m_ObjectHideFlags: 0
@@ -2132,6 +2133,7 @@ MonoBehaviour:
   Target: {fileID: 1046752807}
   Sensitivity: 15
   FovSensitivty: 8
+  UpVector: {x: 0, y: 1, z: 0}
 --- !u!1001 &970007462
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2418,7 +2420,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Extents: {x: 0.5, y: 1, z: 2}
-  Omega: {x: 0.6, y: 1, z: 0.6}
+  Omega: {x: 0.1, y: -1, z: 0.2}
   ApplyAdjustment: 1
   I: {x: 0, y: 0, z: 0}
   L: {x: 0, y: 0, z: 0}
