@@ -57,30 +57,8 @@ public class PoinsotSetup : MonoBehaviour
 		var up = Body.L;
 		up = up - Vector3.Dot(up, ctt) * ctt;
 
-		//Camera.transform.LookAt(InertiaEllipsoid.transform, up);
-
 		Camera.GetComponent<OrbitCamera>().UpVector = up;
-		//Camera.GetComponent<OrbitCamera>().enabled = true;
 	}
-
-	void _OrientCamera()
-	{
-		var cam_dist = Camera.transform.localPosition.magnitude;
-
-		var lcs = Camera.transform.rotation * Body.L;
-		lcs.z = 0;
-
-		Quaternion q = new Quaternion();
-		q.SetFromToRotation(Vector3.up, lcs);
-		Camera.transform.localRotation = q;
-
-		var pos = q * (Vector3.back * cam_dist);
-
-		Camera.transform.localPosition = pos;
-
-		//Camera.GetComponent<OrbitCamera>().enabled = true;
-	}
-
 
 	void OrientPlanes()
 	{
