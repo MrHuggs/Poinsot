@@ -60,7 +60,7 @@ public class ELSolver
 	// each perturbation. Find the one with the largest effect and apply a scaled adjustment
 	// to the orientation.
 	//
-	Quaternion Interate(Quaternion cur_orientation)
+	Quaternion Iterate(Quaternion cur_orientation)
 	{
 		float ecur = EnergyFromOrientation(cur_orientation);
 		float del = Energy - ecur;
@@ -108,7 +108,7 @@ public class ELSolver
 			if (Mathf.Abs(del) < Energy * .0001f)
 				break;
 
-			var next = Interate(initial);
+			var next = Iterate(initial);
 
 
 			float ef = EnergyFromOrientation(next);

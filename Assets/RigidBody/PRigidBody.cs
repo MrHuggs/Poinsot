@@ -4,18 +4,22 @@ using UnityEngine;
 
 public class PRigidBody : MonoBehaviour
 {
+	#region Inspector values
 	// Size of the intertia eillipsoid:
 	public Vector3 Extents;
-	
 	// Angular velocity (world) coordinates:
-	public Vector3 Omega;
-
-	// Controlls apply the ELSolver during normalize:
+	public Vector3 StartingOmega;
+	// Controls applying the ELSolver during normalize:
 	public bool ApplyAdjustment;
+	#endregion
 
 	// Diagonal values of the interia tensor:
 	[HideInInspector]
 	public Vector3 I;
+
+	// Current angular velocity in world coordinates:
+	[HideInInspector]
+	public Vector3 Omega;
 
 	// Conserved values:
 	[HideInInspector]
@@ -23,12 +27,14 @@ public class PRigidBody : MonoBehaviour
 	[HideInInspector]
 	public float Energy;
 
+	// Solver used to adjust orientation to preserve I and Ke. Controlled by ApplyAdjustment.
 	ELSolver ELSolver;
 
-	// Body --> World
+	// Body --> World transform
 	[HideInInspector]
 	public Quaternion Orientation;
 
+	#region Get values in the Body frame
 	public Vector3 BodyOmega()
 	{
 		var ir = Quaternion.Inverse(Orientation);
@@ -46,7 +52,8 @@ public class PRigidBody : MonoBehaviour
 
 		return body_l;
 	}
-	
+	#endregion
+
 	void UpdateOrientation(float dt)
 	{
 		Vector3 axis = Omega.normalized;
@@ -80,17 +87,47 @@ public class PRigidBody : MonoBehaviour
 		Omega = Orientation * body_omega;
 	}
 
-	private void Reset()
+	#region Ellipsoid helpers
+	static Vector3 InertiaFromExtents(Vector3 extents)
 	{
+		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
+		var inertia = new Vector3((extents.y * extents.y + extents.z * extents.z) * 1 / 5,
+							  (extents.x * extents.x + extents.z * extents.z) * 1 / 5,
+							  (extents.x * extents.x + extents.y * extents.y) * 1 / 5
+							  );
+		return inertia;
+	}
+
+	static Vector3 ExtentsFromInertia(Vector3 inertia)
+	{
+		var extents = new Vector3(Mathf.Sqrt((inertia.y + inertia.z - inertia.x) * 5 /2),
+								Mathf.Sqrt((inertia.x + inertia.z - inertia.y) * 5 / 2),
+								Mathf.Sqrt((inertia.x + inertia.y - inertia.z) * 5 / 2)
+							    );
+		return extents;
+	}
+	#endregion
+
+	void Awake()
+	{
+		var inertia = InertiaFromExtents(Extents);
+		SetParameters(inertia, Omega, ApplyAdjustment);
+
+		Debug.Assert((ExtentsFromInertia(inertia) - Extents).magnitude < .001f);
+	}
+
+	public delegate void BodyParmsChangedHanlder();
+	public event BodyParmsChangedHanlder BodyParmsChanged;
+
+	public void SetParameters(Vector3 inertia, Vector3 omega, bool apply_adjustment)
+	{
+		Extents = ExtentsFromInertia(inertia);
+
 		transform.localScale = Extents;
 
 		Orientation = Quaternion.identity;
 
-		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
-		I = new Vector3((Extents.y * Extents.y + Extents.z * Extents.z) * 1 / 5,
-							  (Extents.x * Extents.x + Extents.z * Extents.z) * 1 / 5,
-							  (Extents.x * Extents.x + Extents.y * Extents.y) * 1 / 5
-							  );
+		I = inertia;
 
 		Debug.Log(string.Format("Inertia Values: ({0},{1},{2})", I.x, I.y, I.z));
 
@@ -103,23 +140,21 @@ public class PRigidBody : MonoBehaviour
 
 		ELSolver = new ELSolver(Energy, L, I);
 
-		Debug.Log(string.Format("Initial L {0} E {1}", L, Energy));
+		DumpParameters();
+
+		BodyParmsChanged?.Invoke();
 	}
 
-	private void Awake()
-	{
-		Reset();
-	}
 
 	// Start is called before the first frame update
 	void Start()
     {
-		Debug.Log(string.Format("Initial L {0} E {1}", L, Energy));
-		ShowParms();
 	}
 
-	private void ShowParms()
+	private void DumpParameters()
 	{
+		Debug.Log(string.Format("Initial L {0} E {1}", L, Energy));
+
 		var body_omega = BodyOmega();
 		var body_l = BodyL();
 
