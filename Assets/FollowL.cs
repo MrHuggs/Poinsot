@@ -7,7 +7,7 @@ public class FollowL : MonoBehaviour
 	public GameObject Target;
 	PRigidBody TargetBody;
 	// Start is called before the first frame update
-	void Start()
+	void Awake()
 	{
 		TargetBody = Target.GetComponent<PRigidBody>();
 	}

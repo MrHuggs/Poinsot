@@ -14,27 +14,36 @@ public class PoinsotSetup : MonoBehaviour
 	float MasterScale;
 
 	GameObject UpperPlane;
-	GameObject LowerPlane;
 
 	Arrow L;
 	Arrow Omega;
 
-	GameObject AngularVelocityTrail;
+	TrailRenderer AngularVelocityTrail;
 
 	GameObject InertiaEllipsoid;
 	GameObject Camera;
+	Vector3 InitialCameraPosition;
 
-	// Start is called before the first frame update
-	void Start()
-    {
+	void Awake()
+	{
 		UpperPlane = transform.Find("UpperPlane").gameObject;
-		LowerPlane = transform.Find("LowerPlane").gameObject;
 		L = transform.Find("L").gameObject.GetComponent<Arrow>();
 		Omega = transform.Find("Omega").gameObject.GetComponent<Arrow>();
-		AngularVelocityTrail = transform.Find("AngularVelocityTrail").gameObject;
+		AngularVelocityTrail = transform.Find("AngularVelocityTrail").gameObject.GetComponent<TrailRenderer>();
 		InertiaEllipsoid = transform.Find("InertiaEllipsoid").gameObject;
 		Camera = transform.Find("Camera").gameObject;
 
+		// Save off the cameria postion as set in the editor. After every reset, we'll return
+		// to this location:
+		InitialCameraPosition = Camera.transform.position;
+
+		Body.BodyParmsChanged += SetParameters;
+	}
+
+
+	// Start is called before the first frame update
+	void SetParameters()
+	{
 		// Calculate the master scale based on the state of the body:
 		L_dir = Body.L.normalized;
 		MasterScale = Vector3.Dot(L_dir, Body.Omega);
@@ -45,22 +54,40 @@ public class PoinsotSetup : MonoBehaviour
 		Debug.Log(string.Format("MasterScale {0},", MasterScale));
 
 		OrientCamera();
-		OrientPlanes();
+		OriendPlanesAndL();
 		PositionPlanes();
+
+		// For a given angular velocity in body-fixed-corrdinates, the energy is:
+		// 2E = w_x^2Ix + w_y^2Iy+w_z^2I_z
+		float E = Body.Energy;
+		Vector3 ellipsoid_scale = new Vector3(Mathf.Sqrt(2 * E / Body.I.x),
+											  Mathf.Sqrt(2 * E / Body.I.y),
+											  Mathf.Sqrt(2 * E / Body.I.z));
+
+		//Debug.Log(string.Format("ellipsoid_scale ({0},{1},{2})", ellipsoid_scale.x, ellipsoid_scale.y, ellipsoid_scale.z));
+
+		ellipsoid_scale *= 1 / MasterScale;
+		InertiaEllipsoid.transform.localScale = ellipsoid_scale * 2; // Remember unity sphere has radius 1/2.
+
+		//float f = EvalEllipsoid(Body.BodyOmega(), ellipsoid_scale);
+		//Debug.Log(string.Format("Curr ellipse eq value: {0}", f));
+
+		AngularVelocityTrail.enabled = false;
+		AngularVelocityTrail.Clear();
 	}
 
 	void OrientCamera()
 	{
-		var ctt = InertiaEllipsoid.transform.position - Camera.transform.position;
+		var ctt = InertiaEllipsoid.transform.position - InitialCameraPosition;
 		ctt = ctt.normalized;
 
 		var up = Body.L;
 		up = up - Vector3.Dot(up, ctt) * ctt;
 
-		Camera.GetComponent<OrbitCamera>().UpVector = up;
+		Camera.GetComponent<OrbitCamera>().SetUpVector(up);
 	}
 
-	void OrientPlanes()
+	void OriendPlanesAndL()
 	{
 		// We want the planes to be perpendicular to the angular momentum of the body.
 
@@ -70,7 +97,6 @@ public class PoinsotSetup : MonoBehaviour
 		UpperPlane.transform.rotation = q;
 
 		q.SetFromToRotation(Vector3.up, Body.L);
-		LowerPlane.transform.localRotation = q;
 
 		L.transform.localRotation = q;
 	}
@@ -80,7 +106,6 @@ public class PoinsotSetup : MonoBehaviour
 		// The upper and low invariable planes are 1 unit along the angular momentum
 		// direction.
 		UpperPlane.transform.localPosition = L_dir;
-		LowerPlane.transform.localPosition = -L_dir;
 	}
 
 	// Helper for checking ellipsoid values:
@@ -105,25 +130,8 @@ public class PoinsotSetup : MonoBehaviour
 
 		AngularVelocityTrail.transform.localPosition = Body.Omega / MasterScale;
 
-		// For a given angular velocity in body-fixed-corrdinates, the energy is:
-		// 2E = w_x^2Ix + w_y^2Iy+w_z^2I_z
-
-		float E = Body.Energy;
-		Vector3 ellipsoid_scale = new Vector3(Mathf.Sqrt(2 * E / Body.I.x),
-											  Mathf.Sqrt(2 * E / Body.I.y),
-											  Mathf.Sqrt(2 * E / Body.I.z));
-
-		//Debug.Log(string.Format("ellipsoid_scale ({0},{1},{2})", ellipsoid_scale.x, ellipsoid_scale.y, ellipsoid_scale.z));
-
-		ellipsoid_scale *= 1 / MasterScale;
-
-		InertiaEllipsoid.transform.localScale = ellipsoid_scale * 2;
 		InertiaEllipsoid.transform.rotation = Body.Orientation;
 
-		PositionPlanes();
-
-		//float f = EvalEllipsoid(Body.BodyOmega(), ellipsoid_scale);
-		//Debug.Log(string.Format("Curr ellipse eq value: {0}", f));
-
+		AngularVelocityTrail.enabled = true;			
 	}
 }

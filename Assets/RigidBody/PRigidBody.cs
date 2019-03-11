@@ -110,17 +110,27 @@ public class PRigidBody : MonoBehaviour
 
 	void Awake()
 	{
-		var inertia = InertiaFromExtents(Extents);
-		SetParameters(inertia, Omega, ApplyAdjustment);
-
-		Debug.Assert((ExtentsFromInertia(inertia) - Extents).magnitude < .001f);
 	}
 
 	public delegate void BodyParmsChangedHanlder();
 	public event BodyParmsChangedHanlder BodyParmsChanged;
 
+	void ConditionParameters(ref Vector3 inertia, ref Vector3 omega)
+	{
+		if (omega.magnitude < .001f)
+			omega = new Vector3(0, .001f, 0);
+
+		inertia.x = Mathf.Max(inertia.x, .001f);
+		inertia.y = Mathf.Max(inertia.y, .001f);
+		inertia.z = Mathf.Max(inertia.z, .001f);
+	}
+
+
 	public void SetParameters(Vector3 inertia, Vector3 omega, bool apply_adjustment)
 	{
+		ConditionParameters(ref inertia, ref omega);
+
+		Omega = omega;
 		Extents = ExtentsFromInertia(inertia);
 
 		transform.localScale = Extents;
@@ -149,6 +159,10 @@ public class PRigidBody : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
     {
+		var inertia = InertiaFromExtents(Extents);
+		SetParameters(inertia, StartingOmega, ApplyAdjustment);
+
+		Debug.Assert((ExtentsFromInertia(inertia) - Extents).magnitude < .001f);
 	}
 
 	private void DumpParameters()
@@ -204,6 +218,5 @@ public class PRigidBody : MonoBehaviour
 	void Update()
     {
 		transform.rotation = Orientation;
-        
     }
 }

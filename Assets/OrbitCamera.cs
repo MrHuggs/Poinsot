@@ -11,7 +11,13 @@ public class OrbitCamera : MonoBehaviour
 	public float FovSensitivty = 8;
 
 	// Default up vector. This is only a hint:
-	public Vector3 UpVector = Vector3.up;
+	[SerializeField] Vector3 UpVector = Vector3.up;
+
+	public void SetUpVector(Vector3 up)
+	{
+		UpVector = up;
+		FirstUpdate = true;
+	}
 
 	// Camera we are contolling:
 	Camera Camera;
