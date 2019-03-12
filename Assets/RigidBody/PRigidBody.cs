@@ -5,13 +5,19 @@ using UnityEngine;
 public class PRigidBody : MonoBehaviour
 {
 	#region Inspector values
-	// Size of the intertia eillipsoid:
-	public Vector3 Extents;
+
+	// Diagonal values of the intertia tensor
+	public Vector3 StartingInertia = new Vector3(.3f, .35f, .4f);
+
 	// Angular velocity (world) coordinates:
-	public Vector3 StartingOmega;
+	public Vector3 StartingOmega = new Vector3(.1f, 15, .1f);
 	// Controls applying the ELSolver during normalize:
 	public bool ApplyAdjustment;
 	#endregion
+
+	// Size of the intertia eillipsoid:
+	[HideInInspector]
+	Vector3 Extents;
 
 	// Diagonal values of the interia tensor:
 	[HideInInspector]
@@ -108,9 +114,6 @@ public class PRigidBody : MonoBehaviour
 	}
 	#endregion
 
-	void Awake()
-	{
-	}
 
 	public delegate void BodyParmsChangedHanlder();
 	public event BodyParmsChangedHanlder BodyParmsChanged;
@@ -159,10 +162,9 @@ public class PRigidBody : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
     {
-		var inertia = InertiaFromExtents(Extents);
-		SetParameters(inertia, StartingOmega, ApplyAdjustment);
+		SetParameters(StartingInertia, StartingOmega, ApplyAdjustment);
 
-		Debug.Assert((ExtentsFromInertia(inertia) - Extents).magnitude < .001f);
+		Debug.Assert((InertiaFromExtents(Extents) - StartingInertia).magnitude < .001f);
 	}
 
 	private void DumpParameters()
