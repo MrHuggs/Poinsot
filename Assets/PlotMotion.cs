@@ -59,22 +59,18 @@ from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 fig, ax = plt.subplots()
 
-fig.suptitle('Angular Velocity in Body frame vs Time', fontsize=16)
+fig.suptitle(ftitle, fontsize=16)
 
 plt.plot(t, wx, label = 'wx')
 plt.plot(t, wy, label = 'wy')
 plt.plot(t, wz, label = 'wz')
 
-majorLocator = MultipleLocator(5)
-majorFormatter = FormatStrFormatter('%d')
-minorLocator = MultipleLocator(1)
+ax.xaxis.set_major_locator(MultipleLocator(5))
+ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+ax.xaxis.set_minor_locator(MultipleLocator(1))
 
-ax.xaxis.set_major_locator(majorLocator)
-ax.xaxis.set_major_formatter(majorFormatter)
-ax.xaxis.set_minor_locator(minorLocator)
-
-ax.yaxis.set_major_locator(majorLocator)
-ax.yaxis.set_minor_locator(minorLocator)
+ax.yaxis.set_major_locator(MultipleLocator(1))
+ax.yaxis.set_minor_locator(MultipleLocator(.1))
 
 ax.grid(which = 'major')
 
@@ -96,8 +92,10 @@ plt.show()
 		foreach (var data in DataPoints)
 			sb.AppendFormat("{0}, ", get_value(data));
 		sb.Append("]");
+
 	}
 
+	List<string> TempFiles = new List<string>();
 
 	public void Write()
 	{
@@ -119,9 +117,13 @@ plt.show()
 			MakeValueString(sb, "wz", data => data.Omega.z);
 			writer.WriteLine(sb);
 
+			writer.WriteLine(string.Format("ftitle = \"Body W vs t: I=({0},{1},{2}) W=({3},{4},{5})\"", Body.I.x, Body.I.y, Body.I.z, 
+						Body.InitialOmega.x, Body.InitialOmega.y, Body.InitialOmega.z));
+
 			writer.Write(PythonFooter);
 		}
-		Debug.Log(string.Format("Wrote temp file: {0}", fname));
+		Debug.Log(string.Format("Using Python comand line: \"{0}\" \"{1}\"", PythonPath, fname));
+
 
 		System.Diagnostics.Process p = new System.Diagnostics.Process();
 		p.StartInfo.FileName = PythonPath;
@@ -131,7 +133,16 @@ plt.show()
 
 		p.WaitForExit();
 
-		System.IO.File.Delete(fname);
+		TempFiles.Add(fname);
+		//System.IO.File.Delete(fname);
 
+	}
+
+	private void OnDestroy()
+	{
+		foreach (var fname in TempFiles)
+		{
+			System.IO.File.Delete(fname);
+		}
 	}
 }

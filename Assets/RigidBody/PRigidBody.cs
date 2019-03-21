@@ -9,8 +9,9 @@ public class PRigidBody : MonoBehaviour
 	// Diagonal values of the intertia tensor
 	public Vector3 StartingInertia = new Vector3(.3f, .35f, .4f);
 
-	// Angular velocity (world) coordinates:
+	// Starting angular velocity (world) coordinates:
 	public Vector3 StartingOmega = new Vector3(.1f, 15, .1f);
+
 	// Controls applying the ELSolver during normalize:
 	public bool ApplyAdjustment;
 	#endregion
@@ -22,6 +23,10 @@ public class PRigidBody : MonoBehaviour
 	// Diagonal values of the interia tensor:
 	[HideInInspector]
 	public Vector3 I;
+
+	// Angular velocity used when simulation was last reset:
+	[HideInInspector]
+	public Vector3 InitialOmega;
 
 	// Current angular velocity in world coordinates:
 	[HideInInspector]
@@ -133,6 +138,7 @@ public class PRigidBody : MonoBehaviour
 	{
 		ConditionParameters(ref inertia, ref omega);
 
+		InitialOmega = omega;
 		Omega = omega;
 		Extents = ExtentsFromInertia(inertia);
 
