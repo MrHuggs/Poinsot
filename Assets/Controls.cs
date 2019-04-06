@@ -28,7 +28,7 @@ public class Controls : MonoBehaviour
 		Omega_y.text = Body.Omega.y.ToString();
 		Omega_z.text = Body.Omega.z.ToString();
 
-		PreserverLKe.enabled = Body.ApplyAdjustment;
+		PreserverLKe.isOn = Body.ApplyAdjustment;
 	}
 
 	static float safe_parse(InputField field)
