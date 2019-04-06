@@ -141,6 +141,7 @@ public class PRigidBody : MonoBehaviour
 		InitialOmega = omega;
 		Omega = omega;
 		Extents = ExtentsFromInertia(inertia);
+		ApplyAdjustment = apply_adjustment;
 
 		transform.localScale = Extents;
 
