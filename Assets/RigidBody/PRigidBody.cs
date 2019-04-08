@@ -73,7 +73,7 @@ public class PRigidBody : MonoBehaviour
 	}
 	#endregion
 
-	void UpdateOrientation(float dt)
+	void UpdateOrientation(targ_type dt)
 	{
 		DVector3 axis = Omega.normalized;
 		// Omega is in radians/sec, but AngleAxis need degrees.
@@ -87,7 +87,7 @@ public class PRigidBody : MonoBehaviour
 		Orientation = inc * Orientation;
 	}
 	
-	void UpdateOmega(float dt)
+	void UpdateOmega(targ_type dt)
 	{
 		var ir = DQuaternion.Inverse(Orientation);
 
@@ -224,8 +224,8 @@ public class PRigidBody : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		const float target_dt = .001f;
-		for (float elapsed = 0; elapsed < Time.fixedDeltaTime; elapsed += target_dt)
+		const targ_type target_dt = .00001f;
+		for (targ_type elapsed = 0; elapsed < Time.fixedDeltaTime; elapsed += target_dt)
 		{
 			UpdateOmega(target_dt);
 			UpdateOrientation(target_dt);
