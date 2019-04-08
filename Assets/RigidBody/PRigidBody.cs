@@ -77,7 +77,7 @@ public class PRigidBody : MonoBehaviour
 	{
 		DVector3 axis = Omega.normalized;
 		// Omega is in radians/sec, but AngleAxis need degrees.
-		targ_type w = Omega.magnitude * (360 / (2 * Math.PI));
+		targ_type w = (targ_type) (Omega.magnitude * (360 / (2 * Math.PI)));
 
 		// Note that in Unity, a positive angle of rotation is clockwise around the
 		// axis of rotation. This is unusual....
