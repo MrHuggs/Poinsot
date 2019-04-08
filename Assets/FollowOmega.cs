@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.DoubleMath;
 
 public class FollowOmega : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class FollowOmega : MonoBehaviour
 		transform.position = Target.transform.position;
 
 		Quaternion q = new Quaternion();
-		q.SetFromToRotation(Vector3.up, TargetBody.Omega);
+		q.SetFromToRotation(Vector3.up, DVector3.ToUnity(TargetBody.Omega));
 
 		transform.rotation = q;
 	}

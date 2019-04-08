@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.DoubleMath;
 
 public class PoinsotSetup : MonoBehaviour
 {
@@ -45,8 +46,8 @@ public class PoinsotSetup : MonoBehaviour
 	void SetParameters()
 	{
 		// Calculate the master scale based on the state of the body:
-		L_dir = Body.L.normalized;
-		MasterScale = Vector3.Dot(L_dir, Body.Omega);
+		L_dir = DVector3.ToUnity(Body.L.normalized);
+		MasterScale = Vector3.Dot(L_dir, DVector3.ToUnity(Body.Omega));
 
 		// The angular momentum is just a directional display, so its length is arbitrarty.
 		L.SetLength(1.5f);
@@ -54,15 +55,16 @@ public class PoinsotSetup : MonoBehaviour
 		Debug.Log(string.Format("MasterScale {0},", MasterScale));
 
 		OrientCamera();
-		OriendPlanesAndL();
+		OrientPlanesAndL();
 		PositionPlanes();
 
 		// For a given angular velocity in body-fixed-corrdinates, the energy is:
 		// 2E = w_x^2Ix + w_y^2Iy+w_z^2I_z
-		float E = Body.Energy;
-		Vector3 ellipsoid_scale = new Vector3(Mathf.Sqrt(2 * E / Body.I.x),
-											  Mathf.Sqrt(2 * E / Body.I.y),
-											  Mathf.Sqrt(2 * E / Body.I.z));
+		var body_i = DVector3.ToUnity(Body.I);
+		float E = (float) Body.Energy;
+		Vector3 ellipsoid_scale = new Vector3(Mathf.Sqrt(2 * E / body_i.x),
+											  Mathf.Sqrt(2 * E / body_i.y),
+											  Mathf.Sqrt(2 * E / body_i.z));
 
 		//Debug.Log(string.Format("ellipsoid_scale ({0},{1},{2})", ellipsoid_scale.x, ellipsoid_scale.y, ellipsoid_scale.z));
 
@@ -81,22 +83,22 @@ public class PoinsotSetup : MonoBehaviour
 		var ctt = InertiaEllipsoid.transform.position - InitialCameraPosition;
 		ctt = ctt.normalized;
 
-		var up = Body.L;
+		var up = DVector3.ToUnity(Body.L);
 		up = up - Vector3.Dot(up, ctt) * ctt;
 
 		Camera.GetComponent<OrbitCamera>().SetUpVector(up);
 	}
 
-	void OriendPlanesAndL()
+	void OrientPlanesAndL()
 	{
 		// We want the planes to be perpendicular to the angular momentum of the body.
 
 		Quaternion q = new Quaternion();
 
-		q.SetFromToRotation(Vector3.down, Body.L);
+		q.SetFromToRotation(Vector3.down, DVector3.ToUnity(Body.L));
 		UpperPlane.transform.rotation = q;
 
-		q.SetFromToRotation(Vector3.up, Body.L);
+		q.SetFromToRotation(Vector3.up, DVector3.ToUnity(Body.L));
 
 		L.transform.localRotation = q;
 	}
@@ -123,14 +125,14 @@ public class PoinsotSetup : MonoBehaviour
     {
 
 		Quaternion q = new Quaternion();
-		q.SetFromToRotation(Vector3.up, Body.Omega);
+		q.SetFromToRotation(Vector3.up, DVector3.ToUnity(Body.Omega));
 
 		Omega.transform.localRotation = q;
-		Omega.SetLength(Body.Omega.magnitude / MasterScale);
+		Omega.SetLength((float) Body.Omega.magnitude / MasterScale);
 
-		AngularVelocityTrail.transform.localPosition = Body.Omega / MasterScale;
+		AngularVelocityTrail.transform.localPosition = DVector3.ToUnity(Body.Omega / MasterScale);
 
-		InertiaEllipsoid.transform.rotation = Body.Orientation;
+		InertiaEllipsoid.transform.rotation = DQuaternion.ToUnity(Body.Orientation);
 
 		AngularVelocityTrail.enabled = true;			
 	}

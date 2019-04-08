@@ -20,13 +20,14 @@ public class Controls : MonoBehaviour
 
 	void GetFromBody()
 	{
-		Ix.text = Body.I.x.ToString();
-		Iy.text = Body.I.y.ToString();
-		Iz.text = Body.I.z.ToString();
+		const string fmt = "F2";
+		Ix.text = Body.I.x.ToString(fmt);
+		Iy.text = Body.I.y.ToString(fmt);
+		Iz.text = Body.I.z.ToString(fmt);
 
-		Omega_x.text = Body.Omega.x.ToString();
-		Omega_y.text = Body.Omega.y.ToString();
-		Omega_z.text = Body.Omega.z.ToString();
+		Omega_x.text = Body.Omega.x.ToString(fmt);
+		Omega_y.text = Body.Omega.y.ToString(fmt);
+		Omega_z.text = Body.Omega.z.ToString(fmt);
 
 		PreserverLKe.isOn = Body.ApplyAdjustment;
 	}

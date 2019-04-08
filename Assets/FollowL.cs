@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.DoubleMath;
 
 public class FollowL : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class FollowL : MonoBehaviour
 		transform.position = Target.transform.position;
 
 		Quaternion q = new Quaternion();
-		q.SetFromToRotation(Vector3.up, TargetBody.L);
+		q.SetFromToRotation(Vector3.up, DVector3.ToUnity(TargetBody.L));
 
 		transform.rotation = q;
 	}

@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Assets.DoubleMath;
+using System;
 using UnityEngine.Assertions;
 
 public class BinetSetup : MonoBehaviour
@@ -33,8 +35,8 @@ public class BinetSetup : MonoBehaviour
     {
 
 		// The overall scale of the display is set so that |L| = 1.
-		float m2 = Vector3.Dot(Body.L, Body.L);
-		float E = Body.Energy;
+		double m2 = DVector3.Dot(Body.L, Body.L);
+		double E = Body.Energy;
 
 		Debug.Log(string.Format("Energy: {0} Momentum {1}", E, m2));
 
@@ -43,9 +45,9 @@ public class BinetSetup : MonoBehaviour
 		//  2E =  ---- + ---- +	----
 		//        Ix	 Iy		Iz
 		// Applying our scale, and turning this into an ellipsoid equation gives the following ellipse extents:
-		Vector3 ellipsoid_scale = new Vector3(Mathf.Sqrt(E * Body.I.x * 2 / m2),
-											  Mathf.Sqrt(E * Body.I.y * 2 / m2),
-											  Mathf.Sqrt(E * Body.I.z * 2 / m2));
+		Vector3 ellipsoid_scale = new Vector3((float) Math.Sqrt(E * Body.I.x * 2 / m2),
+											  (float) Math.Sqrt(E * Body.I.y * 2 / m2),
+											  (float) Math.Sqrt(E * Body.I.z * 2 / m2));
 
 		Debug.Log(string.Format("Ellipsoid scale: {0},{1},{2}", ellipsoid_scale.x, ellipsoid_scale.y , ellipsoid_scale.z));
 
@@ -53,7 +55,7 @@ public class BinetSetup : MonoBehaviour
 		EnergyEllipsoid.transform.localScale = ellipsoid_scale * 2;
 
 		BinetFollowL.Target = Body;
-		BinetFollowL.Scale = 1 / Mathf.Sqrt(m2);
+		BinetFollowL.Scale = (float) (1 / Math.Sqrt(m2));
 
 
 		BinetFollowTrail.enabled = false;

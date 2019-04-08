@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Text;
+using Assets.DoubleMath;
 
 public class PlotMotion : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class PlotMotion : MonoBehaviour
 	struct Data
 	{
 		public float t;
-		public Vector3 Omega;
+		public DVector3 Omega;
 	}
 
 	float TotalTime;
@@ -84,7 +85,7 @@ plt.show()
 	// Todo: Set this to be the actual python path:
 	const string PythonPath = @"C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python36_64\python.exe";
 
-	delegate float GetValue(Data data);
+	delegate double GetValue(Data data);
 	void MakeValueString(StringBuilder sb, string name, GetValue get_value)
 	{
 		sb.Clear();
@@ -117,7 +118,7 @@ plt.show()
 			MakeValueString(sb, "wz", data => data.Omega.z);
 			writer.WriteLine(sb);
 
-			writer.WriteLine(string.Format("ftitle = \"Body W vs t: I=({0},{1},{2}) W=({3},{4},{5})\"", Body.I.x, Body.I.y, Body.I.z, 
+			writer.WriteLine(string.Format("ftitle = \"Body W vs t: I=({0:F2},{1:F2},{2:F2}) W=({3:F2},{4:F2},{5:F2})\"", Body.I.x, Body.I.y, Body.I.z, 
 						Body.InitialOmega.x, Body.InitialOmega.y, Body.InitialOmega.z));
 
 			writer.Write(PythonFooter);

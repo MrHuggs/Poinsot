@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Assets.DoubleMath;
 
 public class BinetFollowL : MonoBehaviour
 {
@@ -20,6 +19,6 @@ public class BinetFollowL : MonoBehaviour
 		var body_l = Target.BodyL();
 		var offset = body_l * Scale;
 
-		transform.localPosition = offset;
+		transform.localPosition = DVector3.ToUnity(offset);
 	}
 }

@@ -1,7 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
 using UnityEngine;
-
+using System;
+using Assets.DoubleMath;
 
 public class ELSolver
 {
@@ -10,24 +10,24 @@ public class ELSolver
 	// We will apply small rotations to bring them back into balance.
 	// Basic ideal is gradiant descent.
 
-	Vector3 AngularMomentum;
-	Vector3 Inertia;
-	float Energy;
+	DVector3 AngularMomentum;
+	DVector3 Inertia;
+	double Energy;
 
-	public ELSolver(float energy, Vector3 l, Vector3 inertia)
+	public ELSolver(double energy, DVector3 l, DVector3 inertia)
 	{
 		AngularMomentum = l;
 		Energy = energy;
 		Inertia = inertia;
 	}
 
-	public static float EnergyFromOrientation(Quaternion o, Vector3 L, Vector3 I)
+	public static double EnergyFromOrientation(DQuaternion o, DVector3 L, DVector3 I)
 	{
-		var ir = Quaternion.Inverse(o);
+		var ir = DQuaternion.Inverse(o);
 
-		Vector3 body_l = ir * L;
+		DVector3 body_l = ir * L;
 
-		float e = body_l.x * body_l.x / I.x +
+		double e = body_l.x * body_l.x / I.x +
 				  body_l.y * body_l.y / I.y +
 				  body_l.z * body_l.z / I.z;
 
@@ -35,84 +35,87 @@ public class ELSolver
 
 		return e;
 	}
-	float EnergyFromOrientation(Quaternion o)
+	double EnergyFromOrientation(DQuaternion o)
 	{
 		return EnergyFromOrientation(o, AngularMomentum, Inertia);
 	}
 
 	// List of potential perturbations:
-	const float AdjustAngle = .05f;
-	static Quaternion[] Adjustments =
+	const double AdjustAngle = .05f;
+	static DQuaternion[] Adjustments =
 	{
-			Quaternion.AngleAxis(AdjustAngle, Vector3.left),
-			Quaternion.AngleAxis(AdjustAngle, Vector3.up),
-			Quaternion.AngleAxis(AdjustAngle, Vector3.forward)
+			DQuaternion.AngleAxis(AdjustAngle, DVector3.left),
+			DQuaternion.AngleAxis(AdjustAngle, DVector3.up),
+			DQuaternion.AngleAxis(AdjustAngle, DVector3.forward)
 	};
 
-	static Vector3[] AdjustmentDirs =
+	static DVector3[] AdjustmentDirs =
 	{
-			Vector3.left,
-			Vector3.up,
-			Vector3.forward
+			DVector3.left,
+			DVector3.up,
+			DVector3.forward
 	};
 
 	// Perform a single iteration: Find the energy delta, measure the gradient WRT
 	// each perturbation. Find the one with the largest effect and apply a scaled adjustment
 	// to the orientation.
 	//
-	Quaternion Iterate(Quaternion cur_orientation)
+	DQuaternion Iterate(DQuaternion cur_orientation)
 	{
-		float ecur = EnergyFromOrientation(cur_orientation);
-		float del = Energy - ecur;
+		double ecur = EnergyFromOrientation(cur_orientation);
+		double del = Energy - ecur;
 
-		float dm = 0;
-		float delbest = 0;
+		double dm = 0;
+		double delbest = 0;
 		int ibest = 0;
 		for (int im = 0; im < Adjustments.Length; im++)
 		{
 			var o = Adjustments[im] * cur_orientation;
 			var ep = EnergyFromOrientation(o);
 			var cd = ep - ecur;
-			if (Mathf.Abs(cd) > dm)
+			if (Math.Abs(cd) > dm)
 			{
 				ibest = im;
 				delbest = cd;
-				dm = Mathf.Abs(cd);
+				dm = Math.Abs(cd);
 			}
 		}
 
-		float factor = del / delbest;
-		factor = Mathf.Clamp(factor, -4, 4);
-		float angle = AdjustAngle * factor;
+		double factor = del / delbest;
 
-		var adjust = Quaternion.AngleAxis(angle, AdjustmentDirs[ibest]);
+		if (factor < -4) factor = -4;			// There is no clamp for doubles.
+		else if (factor > 4) factor = 4;
+
+		double angle = AdjustAngle * factor;
+
+		var adjust = DQuaternion.AngleAxis(angle, AdjustmentDirs[ibest]);
 
 		var next_orientation = adjust * cur_orientation;
 
 		return next_orientation;
 	}
 
-	public Quaternion AdjustOrientation(Quaternion initial)
+	public DQuaternion AdjustOrientation(DQuaternion initial)
 	{
-		Quaternion cur = initial;
+		DQuaternion cur = initial;
 		int niter = 0;
 
-		float ecur_i = EnergyFromOrientation(cur);
-		float del_i = Energy - ecur_i;
+		double ecur_i = EnergyFromOrientation(cur);
+		double del_i = Energy - ecur_i;
 
 		for (; ; )
 		{
-			float ecur = EnergyFromOrientation(cur);
-			float del = Energy - ecur;
+			double ecur = EnergyFromOrientation(cur);
+			double del = Energy - ecur;
 
-			if (Mathf.Abs(del) < Energy * .0001f)
+			if (Math.Abs(del) < Energy * .0001f)
 				break;
 
 			var next = Iterate(initial);
 
 
-			float ef = EnergyFromOrientation(next);
-			float delf = Energy - ef;
+			double ef = EnergyFromOrientation(next);
+			double delf = Energy - ef;
 			Debug.Assert(delf <= del);
 
 			cur = next;
@@ -124,8 +127,8 @@ public class ELSolver
 
 		if (niter > 0)
 		{
-			float ecur_f = EnergyFromOrientation(cur);
-			float del_f = Energy - ecur_f;
+			double ecur_f = EnergyFromOrientation(cur);
+			double del_f = Energy - ecur_f;
 
 			//Debug.Log(string.Format("ELSolver changed del from {0} to {1} out of {2} in {3} iter.",
 			//			del_i, del_f, Energy, niter));

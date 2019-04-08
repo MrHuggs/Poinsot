@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using Assets.DoubleMath;
 
 public class BinetCamera : MonoBehaviour
 {
@@ -21,7 +20,7 @@ public class BinetCamera : MonoBehaviour
 	{
 		var body_l = Body.BodyL();
 		var offset = body_l.normalized * 4;
-		transform.localPosition = offset;
+		transform.localPosition = DVector3.ToUnity(offset);
 		transform.LookAt(MomentumSphere.transform);
 	}
 
