@@ -21,7 +21,7 @@ public class PRigidBody : MonoBehaviour
 	public Vector3 StartingOmega = new Vector3(.1f, 15, .1f);
 
 	// Controls applying the ELSolver during normalize:
-	public bool ApplyAdjustment;
+	public bool ApplyAdjustment = false;
 	#endregion
 
 	// Size of the intertia eillipsoid:
@@ -40,6 +40,10 @@ public class PRigidBody : MonoBehaviour
 	[HideInInspector]
 	public DVector3 Omega;
 
+	// Current angular velocity in world coordinates:
+	[HideInInspector]
+	public DVector3 _BodyOmega;
+
 	// Conserved values:
 	[HideInInspector]
 	public DVector3 L;
@@ -52,14 +56,11 @@ public class PRigidBody : MonoBehaviour
 	// Body --> World transform
 	[HideInInspector]
 	public DQuaternion Orientation;
+	[HideInInspector]
+	public DQuaternion PrevOrientation;
 
 	#region Get values in the Body frame
-	public DVector3 BodyOmega()
-	{
-		var ir = DQuaternion.Inverse(Orientation);
-		var body_omega = ir * Omega;
-		return body_omega;
-	}
+	public DVector3 BodyOmega() { return _BodyOmega;  }
 
 	public DVector3 BodyL()
 	{
@@ -70,6 +71,18 @@ public class PRigidBody : MonoBehaviour
 		body_l.z = body_omega.z * I.z;
 
 		return body_l;
+	}
+	#endregion
+
+	#region Get current values of things that should be concerved, but may not acutally be:
+	public DVector3 CurrentL()
+	{
+		return Orientation * BodyL();
+	}
+	public double CurrentE()
+	{
+		var E = DVector3.Dot(BodyL(), BodyOmega()) * .5;
+		return E;
 	}
 	#endregion
 
@@ -84,17 +97,26 @@ public class PRigidBody : MonoBehaviour
 
 		var inc = DQuaternion.AngleAxis(w * dt, axis);
 
+		PrevOrientation = Orientation;
 		Orientation = inc * Orientation;
+
 	}
 	
 	void UpdateOmega(targ_type dt)
 	{
 		var ir = DQuaternion.Inverse(Orientation);
-
 		var body_omega = ir * Omega;
 
-		DVector3 body_omega_dt = new DVector3();
+		var dist = DVector3.Distance(body_omega, _BodyOmega);
+		if (dist > dt)
+		{
+			Debug.Log(string.Format("Dist: {0}", dist));
+			Debug.Log(body_omega);
+			Debug.Log(_BodyOmega);
+		}
+		//body_omega = _BodyOmega;
 
+		DVector3 body_omega_dt = new DVector3();
 		// Euler's equations for torque free motion.
 		// Even the the Unity coordinate system is left-handed, this still works.
 		body_omega_dt.x = (I.y - I.z) * body_omega.y * body_omega.z / I.x;
@@ -103,10 +125,14 @@ public class PRigidBody : MonoBehaviour
 
 		body_omega += body_omega_dt * dt;
 
+		_BodyOmega = body_omega;
+
 		Omega = Orientation * body_omega;
+
+		Debug.Assert(DVector3.Distance(body_omega, DQuaternion.Inverse(Orientation) * Omega) < 1.0e10);
 	}
 
-	#region Ellipsoid helpers
+#region Ellipsoid helpers
 	static DVector3 InertiaFromExtents(DVector3 extents)
 	{
 		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
@@ -125,7 +151,7 @@ public class PRigidBody : MonoBehaviour
 							    );
 		return extents;
 	}
-	#endregion
+#endregion
 
 
 	public delegate void BodyParmsChangedHanlder();
@@ -147,13 +173,17 @@ public class PRigidBody : MonoBehaviour
 		ConditionParameters(ref inertia, ref omega);
 
 		InitialOmega = DVector3.FromUnity(omega);
-		Omega = InitialOmega;
+
+		Omega = InitialOmega;			// Initial BTW is identity
+		_BodyOmega = InitialOmega;
+
 		Extents = ExtentsFromInertia(DVector3.FromUnity(inertia));
 		ApplyAdjustment = apply_adjustment;
 
 		transform.localScale = DVector3.ToUnity(Extents);
 
 		Orientation = DQuaternion.identity;
+		PrevOrientation = DQuaternion.identity;
 
 		I = DVector3.FromUnity(inertia);
 
@@ -165,6 +195,7 @@ public class PRigidBody : MonoBehaviour
 		L.z = I.z * Omega.z;
 
 		Energy = ELSolver.EnergyFromOrientation(Orientation, L, I);
+		Debug.Assert(Energy == CurrentE());
 
 		ELSolver = new ELSolver(Energy, L, I);
 
@@ -208,30 +239,44 @@ public class PRigidBody : MonoBehaviour
 		Orientation.Normalize();
 
 		if (ApplyAdjustment)
+		{
 			Orientation = ELSolver.AdjustOrientation(Orientation);
 
-		var ir = DQuaternion.Inverse(Orientation);
-		var body_l = ir * L;
+			var ir = DQuaternion.Inverse(Orientation);
+			var body_l = ir * L;
 
-		DVector3 body_omega = new DVector3();
-		body_omega.x = body_l.x / I.x;
-		body_omega.y = body_l.y / I.y;
-		body_omega.z = body_l.z / I.z;
+			DVector3 body_omega = new DVector3();
+			body_omega.x = body_l.x / I.x;
+			body_omega.y = body_l.y / I.y;
+			body_omega.z = body_l.z / I.z;
 
-		Omega = Orientation * body_omega;
+/*			var dist = DVector3.Distance(body_omega, _BodyOmega);
+			if (dist > .001 && false)
+			{
+				Debug.Log(string.Format("Dist: {0}", dist));
+				Debug.Log(body_omega);
+				Debug.Log(_BodyOmega);
+			}*/
+
+			Omega = Orientation * body_omega;
+		}
+
 
 	}
 
 	private void FixedUpdate()
 	{
-		const targ_type target_dt = .00001f;
+		// Some experimentation suggests .001 is the largest stepsize we can use.
+		// .0001 doesn't seem to produce difference results
+		// .01 givens significantly different ones.
+		const targ_type target_dt = .001f;
 		for (targ_type elapsed = 0; elapsed < Time.fixedDeltaTime; elapsed += target_dt)
 		{
 			UpdateOmega(target_dt);
 			UpdateOrientation(target_dt);
 		}
 		Normalize();
-		//ShowParms();
+		DumpParameters();
 	}
 
 	// Update is called once per frame

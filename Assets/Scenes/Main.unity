@@ -1558,7 +1558,7 @@ GameObject:
   - component: {fileID: 534669903}
   - component: {fileID: 534669906}
   m_Layer: 11
-  m_Name: Down
+  m_Name: World Space
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4522,12 +4522,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartingInertia: {x: 0.3, y: 0.35, z: 0.4}
   StartingOmega: {x: 0.1, y: 15, z: 0.1}
-  ApplyAdjustment: 1
-  I: {x: 0, y: 0, z: 0}
-  Omega: {x: 0.1, y: -1, z: 0.2}
-  L: {x: 0, y: 0, z: 0}
+  ApplyAdjustment: 0
   Energy: 0
-  Orientation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &1181152028
 GameObject:
   m_ObjectHideFlags: 0
@@ -5508,7 +5504,7 @@ Canvas:
   serializedVersion: 3
   m_RenderMode: 1
   m_Camera: {fileID: 1200174245}
-  m_PlaneDistance: 100
+  m_PlaneDistance: 1
   m_PixelPerfect: 1
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
@@ -5516,7 +5512,7 @@ Canvas:
   m_SortingBucketNormalizedSize: 0
   m_AdditionalShaderChannelsFlag: 25
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!1 &1638206716
 GameObject:

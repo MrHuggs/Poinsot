@@ -122,7 +122,10 @@ public class ELSolver
 
 			niter++;
 			if (niter > 6)
+			{
+				Debug.Log("EL Sovler ran out of iterations.");
 				break;
+			}
 		}
 
 		if (niter > 0)
