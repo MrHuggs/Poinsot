@@ -11,8 +11,12 @@ public class PlotMotion : MonoBehaviour
 	const int MaxDataPoints = 4096;
 	struct Data
 	{
-		public float t;
+		public double t;
 		public DVector3 Omega;
+		public DVector3 L;
+		public double LNorm;
+		public double E;
+
 	}
 
 	float TotalTime;
@@ -30,6 +34,9 @@ public class PlotMotion : MonoBehaviour
 		Data val;
 		val.t = TotalTime;
 		val.Omega = Body.BodyOmega();
+		val.L = Body.CurrentL();
+		val.LNorm = val.L.magnitude;
+		val.E = Body.CurrentE();
 
 		DataPoints.Add(val);
 	}
@@ -118,6 +125,21 @@ plt.show()
 			MakeValueString(sb, "wz", data => data.Omega.z);
 			writer.WriteLine(sb);
 
+			MakeValueString(sb, "lx", data => data.L.x);
+			writer.WriteLine(sb);
+
+			MakeValueString(sb, "ly", data => data.L.y);
+			writer.WriteLine(sb);
+
+			MakeValueString(sb, "lz", data => data.L.z);
+			writer.WriteLine(sb);
+
+			MakeValueString(sb, "ln", data => data.LNorm);
+			writer.WriteLine(sb);
+
+			MakeValueString(sb, "E", data => data.E);
+			writer.WriteLine(sb);
+
 			writer.WriteLine(string.Format("ftitle = \"Body W vs t: I=({0:F2},{1:F2},{2:F2}) W=({3:F2},{4:F2},{5:F2})\"", Body.I.x, Body.I.y, Body.I.z, 
 						Body.InitialOmega.x, Body.InitialOmega.y, Body.InitialOmega.z));
 
@@ -135,8 +157,6 @@ plt.show()
 		p.WaitForExit();
 
 		TempFiles.Add(fname);
-		//System.IO.File.Delete(fname);
-
 	}
 
 	private void OnDestroy()
