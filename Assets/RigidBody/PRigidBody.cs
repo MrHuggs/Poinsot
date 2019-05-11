@@ -62,6 +62,9 @@ public class PRigidBody : MonoBehaviour
 	// Solver used to adjust orientation to preserve I and Ke. Controlled by ApplyAdjustment.
 	ELSolver ELSolver;
 
+	// Number of updates - just for logging.
+	Int64 UpdateCount;
+
 	// Body --> World transform
 	[HideInInspector]
 	public DQuaternion Orientation;
@@ -112,6 +115,7 @@ public class PRigidBody : MonoBehaviour
 		DVector3 body_omega_dt = new DVector3();
 		// Euler's equations for torque free motion.
 		// Even the the Unity coordinate system is left-handed, this still works.
+		// Uses explicity Euler integration...
 		body_omega_dt.x = (I.y - I.z) * body_omega.y * body_omega.z / I.x;
 		body_omega_dt.y = (I.z - I.x) * body_omega.z * body_omega.x / I.y;
 		body_omega_dt.z = (I.x - I.y) * body_omega.x * body_omega.y / I.z;
@@ -123,7 +127,31 @@ public class PRigidBody : MonoBehaviour
 		Debug.Assert(DVector3.Distance(body_omega, DQuaternion.Inverse(Orientation) * Omega) < 1.0e10);
 	}
 
-#region Ellipsoid helpers
+
+	void UpdateOmegaRK(targ_type dt)
+	{
+		// Uses Runge-Kutta integrator...
+		targ_type[] omega_vec = { BodyOmega.x, BodyOmega.y, BodyOmega.z };
+
+		targ_type[] f(targ_type t, targ_type[] body_omega_vec)
+		{
+			targ_type[] body_omega_dt = new targ_type[3];
+			body_omega_dt[0] = (I.y - I.z) * body_omega_vec[1] * body_omega_vec[2] / I.x;
+			body_omega_dt[1] = (I.z - I.x) * body_omega_vec[2] * body_omega_vec[0] / I.y;
+			body_omega_dt[2] = (I.x - I.y) * body_omega_vec[0] * body_omega_vec[1] / I.z;
+
+			return body_omega_dt;
+		}
+
+		targ_type[] next_omega = Assets.RigidBody.RK4.RK4vec(0, omega_vec, dt, f);
+
+		_BodyOmega.x = next_omega[0];
+		_BodyOmega.y = next_omega[1];
+		_BodyOmega.z = next_omega[2];
+
+	}
+
+	#region Ellipsoid helpers
 	static DVector3 InertiaFromExtents(DVector3 extents)
 	{
 		// referencing http://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
@@ -188,6 +216,7 @@ public class PRigidBody : MonoBehaviour
 		Debug.Assert(Energy == CurrentE());
 
 		ELSolver = new ELSolver(Energy, L, I);
+		UpdateCount = 0;
 
 		DumpParameters();
 
@@ -218,7 +247,7 @@ public class PRigidBody : MonoBehaviour
 		DVector3 l = Orientation * body_l;
 		double l2 = DVector3.Dot(body_l, body_l);
 
-		Debug.Log(string.Format("L={0} L^2={1} |L|={2} E={3}", l, l2, Math.Sqrt(l2), e));
+		Debug.Log(string.Format("t ={0} L={1} L^2={2} |L|={3} E={4}", Time.fixedDeltaTime * UpdateCount, l, l2, Math.Sqrt(l2), e));
 	}
 
 	private void Normalize()
@@ -245,14 +274,22 @@ public class PRigidBody : MonoBehaviour
 		// Some experimentation suggests .001 is the largest stepsize we can use.
 		// .0001 doesn't seem to produce difference results
 		// .01 givens significantly different ones.
+		// If we use the Runge-Kutta integrator, .01 works just fine...
 		const targ_type target_dt = .001f;
 		for (targ_type elapsed = 0; elapsed < Time.fixedDeltaTime; elapsed += target_dt)
 		{
+			// Explicit Euler integrator:
 			UpdateOmega(target_dt);
+			// Runge-Kutta integrator:
+			//UpdateOmegaRK(target_dt);
 			UpdateOrientation(target_dt);
 		}
 		Normalize();
-		DumpParameters();
+
+		if ((UpdateCount % 30) == 0)
+			DumpParameters();
+
+		UpdateCount++;
 	}
 
 	// Update is called once per frame

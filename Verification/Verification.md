@@ -32,5 +32,12 @@ is around 11 seconds, but around 25 seconds there is a qualitative difference in
 Even with double precision math, the energy and angular momentum group over time. The "Preserve L and K_e" options applies corrections
 to preserve these quantities, but the motion is changed - the period is more like 9.5 seconds. You can see this in "Fig 4a compare with Adjustment.png."
 
+Explict Euler with a .001 step sizes does reasonably well, but the 4th order Runge-Kutta preserves L and K_e much better:
 
+Initial:
+	t =0 L=(0.0, 5.2, 0.0) L^2=27.5649990614206 |L|=5.25023800045489 E=39.3784993296415
 
+Runge-Kutta:
+	t =51 L=(0.0, 5.3, 0.0) L^2=27.5649990614198 |L|=5.25023800045482 E=39.3784993296404
+Explicit Euler:
+	t =51 L=(0.0, 5.3, 0.0) L^2=28.5453250007816 |L|=5.34278251483079 E=40.7789784231468
