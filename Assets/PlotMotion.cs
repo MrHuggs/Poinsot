@@ -33,7 +33,7 @@ public class PlotMotion : MonoBehaviour
 	{
 		Data val;
 		val.t = TotalTime;
-		val.Omega = Body.BodyOmega();
+		val.Omega = Body.BodyOmega;
 		val.L = Body.CurrentL();
 		val.LNorm = val.L.magnitude;
 		val.E = Body.CurrentE();

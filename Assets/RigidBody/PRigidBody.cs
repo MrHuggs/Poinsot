@@ -38,11 +38,20 @@ public class PRigidBody : MonoBehaviour
 
 	// Current angular velocity in world coordinates:
 	[HideInInspector]
-	public DVector3 Omega;
+	public DVector3 Omega
+	{
+		get { return Orientation * _BodyOmega; }
+	}
 
-	// Current angular velocity in world coordinates:
+	// Current angular velocity in body coordinates:
 	[HideInInspector]
 	public DVector3 _BodyOmega;
+
+	public DVector3 BodyOmega
+	{
+		get { return _BodyOmega; }
+		private set { _BodyOmega = value; }
+	}
 
 	// Conserved values:
 	[HideInInspector]
@@ -59,20 +68,15 @@ public class PRigidBody : MonoBehaviour
 	[HideInInspector]
 	public DQuaternion PrevOrientation;
 
-	#region Get values in the Body frame
-	public DVector3 BodyOmega() { return _BodyOmega;  }
-
 	public DVector3 BodyL()
 	{
-		var body_omega = BodyOmega();
 		var body_l = new DVector3();
-		body_l.x = body_omega.x * I.x;
-		body_l.y = body_omega.y * I.y;
-		body_l.z = body_omega.z * I.z;
+		body_l.x = BodyOmega.x * I.x;
+		body_l.y = BodyOmega.y * I.y;
+		body_l.z = BodyOmega.z * I.z;
 
 		return body_l;
 	}
-	#endregion
 
 	#region Get current values of things that should be concerved, but may not acutally be:
 	public DVector3 CurrentL()
@@ -81,7 +85,7 @@ public class PRigidBody : MonoBehaviour
 	}
 	public double CurrentE()
 	{
-		var E = DVector3.Dot(BodyL(), BodyOmega()) * .5;
+		var E = DVector3.Dot(BodyL(), BodyOmega) * .5;
 		return E;
 	}
 	#endregion
@@ -99,22 +103,11 @@ public class PRigidBody : MonoBehaviour
 
 		PrevOrientation = Orientation;
 		Orientation = inc * Orientation;
-
 	}
-	
+
 	void UpdateOmega(targ_type dt)
 	{
-		var ir = DQuaternion.Inverse(Orientation);
-		var body_omega = ir * Omega;
-
-		var dist = DVector3.Distance(body_omega, _BodyOmega);
-		if (dist > dt)
-		{
-			Debug.Log(string.Format("Dist: {0}", dist));
-			Debug.Log(body_omega);
-			Debug.Log(_BodyOmega);
-		}
-		//body_omega = _BodyOmega;
+		var body_omega = BodyOmega;
 
 		DVector3 body_omega_dt = new DVector3();
 		// Euler's equations for torque free motion.
@@ -125,9 +118,7 @@ public class PRigidBody : MonoBehaviour
 
 		body_omega += body_omega_dt * dt;
 
-		_BodyOmega = body_omega;
-
-		Omega = Orientation * body_omega;
+		BodyOmega = body_omega;
 
 		Debug.Assert(DVector3.Distance(body_omega, DQuaternion.Inverse(Orientation) * Omega) < 1.0e10);
 	}
@@ -174,8 +165,7 @@ public class PRigidBody : MonoBehaviour
 
 		InitialOmega = DVector3.FromUnity(omega);
 
-		Omega = InitialOmega;			// Initial BTW is identity
-		_BodyOmega = InitialOmega;
+		BodyOmega = InitialOmega; // Initial BTW is identity
 
 		Extents = ExtentsFromInertia(DVector3.FromUnity(inertia));
 		ApplyAdjustment = apply_adjustment;
@@ -220,7 +210,7 @@ public class PRigidBody : MonoBehaviour
 	{
 		Debug.Log(string.Format("Initial L {0} E {1}", L, Energy));
 
-		var body_omega = BodyOmega();
+		var body_omega = BodyOmega;
 		var body_l = BodyL();
 
 		var e = DVector3.Dot(body_l, body_omega) * .5f;
@@ -235,7 +225,6 @@ public class PRigidBody : MonoBehaviour
 	{
 		// Renormalize the orientation, and make sure angular momentum
 		// and energy are being conserved.
-		
 		Orientation.Normalize();
 
 		if (ApplyAdjustment)
@@ -245,23 +234,10 @@ public class PRigidBody : MonoBehaviour
 			var ir = DQuaternion.Inverse(Orientation);
 			var body_l = ir * L;
 
-			DVector3 body_omega = new DVector3();
-			body_omega.x = body_l.x / I.x;
-			body_omega.y = body_l.y / I.y;
-			body_omega.z = body_l.z / I.z;
-
-/*			var dist = DVector3.Distance(body_omega, _BodyOmega);
-			if (dist > .001 && false)
-			{
-				Debug.Log(string.Format("Dist: {0}", dist));
-				Debug.Log(body_omega);
-				Debug.Log(_BodyOmega);
-			}*/
-
-			Omega = Orientation * body_omega;
+			_BodyOmega.x = body_l.x / I.x;
+			_BodyOmega.y = body_l.y / I.y;
+			_BodyOmega.z = body_l.z / I.z;
 		}
-
-
 	}
 
 	private void FixedUpdate()
