@@ -86,12 +86,12 @@ namespace Assets.RigidBody
 			//
 			f0 = f(t0, u0);
 
-			t1 = t0 + dt / 2.0;
-			u1 = u0 + dt * f0 / 2.0;
+			t1 = (targ_type) (t0 + dt / 2.0);
+			u1 = (targ_type) (u0 + dt * f0 / 2.0);
 			f1 = f(t1, u1);
 
-			t2 = t0 + dt / 2.0;
-			u2 = u0 + dt * f1 / 2.0;
+			t2 = (targ_type) (t0 + dt / 2.0);
+			u2 = (targ_type) (u0 + dt * f1 / 2.0);
 			f2 = f(t2, u2);
 
 			t3 = t0 + dt;
@@ -100,7 +100,7 @@ namespace Assets.RigidBody
 			//
 			//  Combine to estimate the solution at time T0 + DT.
 			//
-			u = u0 + dt * (f0 + 2.0 * f1 + 2.0 * f2 + f3) / 6.0;
+			u = (targ_type) (u0 + dt * (f0 + 2.0 * f1 + 2.0 * f2 + f3) / 6.0);
 
 			return u;
 		}
@@ -174,17 +174,17 @@ namespace Assets.RigidBody
 			//
 			f0 = f(t0, u0);
 
-			t1 = t0 + dt / 2.0;
+			t1 = (targ_type) (t0 + dt / 2.0);
 			for (i = 0; i < n; i++)
 			{
-				u1[i] = u0[i] + dt * f0[i] / 2.0;
+				u1[i] = (targ_type) (u0[i] + dt * f0[i] / 2.0);
 			}
 			f1 = f(t1, u1);
 
-			t2 = t0 + dt / 2.0;
+			t2 = (targ_type) (t0 + dt / 2.0);
 			for (i = 0; i < n; i++)
 			{
-				u2[i] = u0[i] + dt * f1[i] / 2.0;
+				u2[i] = (targ_type) (u0[i] + dt * f1[i] / 2.0);
 			}
 			f2 = f(t2, u2);
 
@@ -199,7 +199,7 @@ namespace Assets.RigidBody
 			//
 			for (i = 0; i < n; i++)
 			{
-				u[i] = u0[i] + dt * (f0[i] + 2.0 * f1[i] + 2.0 * f2[i] + f3[i]) / 6.0;
+				u[i] = (targ_type) (u0[i] + dt * (f0[i] + 2.0 * f1[i] + 2.0 * f2[i] + f3[i]) / 6.0);
 			}
 
 			return u;
