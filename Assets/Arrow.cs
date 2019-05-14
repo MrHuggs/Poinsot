@@ -34,7 +34,7 @@ public class Arrow : MonoBehaviour
 
 
 	// Start is called before the first frame update
-	void Start()
+	void Awake()
     {
 		Shaft = transform.Find("Shaft").gameObject;
 		Head = transform.Find("Head").gameObject;
