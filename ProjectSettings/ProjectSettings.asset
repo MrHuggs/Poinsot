@@ -528,6 +528,7 @@ PlayerSettings:
   webGLThreadsSupport: 0
   scriptingDefineSymbols:
     1: USE_UNITY;targ_double
+    13: USE_UNITY;targ_double
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
