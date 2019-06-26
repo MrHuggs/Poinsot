@@ -1,68 +1,78 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using System.Text;
 using Assets.DoubleMath;
 
 public class PlotMotion : MonoBehaviour
 {
-	public PRigidBody Body;
+    public PRigidBody Body;
 
-	const int MaxDataPoints = 4096;
-	struct Data
-	{
-		public double t;
-		public DVector3 Omega;
-		public DVector3 L;
-		public double LNorm;
-		public double E;
+    const int MaxDataPoints = 4096;
 
-	}
-
-	float TotalTime;
-	List<Data> DataPoints;
-
-	void Reset()
-	{
-		TotalTime = 0;
-		DataPoints = new List<Data>();
-		Sample();		
-	}
-
-	void Sample()
-	{
-		Data val;
-		val.t = TotalTime;
-		val.Omega = Body.BodyOmega;
-		val.L = Body.CurrentL();
-		val.LNorm = val.L.magnitude;
-		val.E = Body.CurrentE();
-
-		DataPoints.Add(val);
-	}
-
-
-	private void Awake()
-	{
-		Body.BodyParmsChanged += Reset;		
-	}
-	// Start is called before the first frame update
-	void Start()
+    struct Data
     {
-		Reset();
+        public double t;
+        public DVector3 Omega;
+        public DVector3 L;
+        public double LNorm;
+        public double E;
+
+    }
+
+    float TotalTime;
+    private float LastSample;
+    List<Data> DataPoints;
+
+    void Reset()
+    {
+        TotalTime = 0;
+        LastSample = 0;
+        DataPoints = new List<Data>();
+        Sample();
+    }
+
+    void Sample()
+    {
+        Data val;
+        val.t = TotalTime;
+        val.Omega = Body.BodyOmega;
+        val.L = Body.CurrentL();
+        val.LNorm = val.L.magnitude;
+        val.E = Body.CurrentE();
+
+        DataPoints.Add(val);
+        LastSample = TotalTime;
+    }
+
+
+    private void Awake()
+    {
+        Body.BodyParmsChanged += Reset;
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        Reset();
     }
 
     // Update is called once per frame
     void Update()
     {
-		TotalTime += Time.deltaTime;
+        TotalTime += Time.deltaTime;
 
-		if (DataPoints.Count < MaxDataPoints)
-			Sample();
+        if (DataPoints.Count >= MaxDataPoints)
+            return;
+
+        if (TotalTime - LastSample < .02f)
+            return;
+
+        Sample();
     }
 
-	const string PythonFooter =
-@"import matplotlib.pyplot as plt
+    const string PythonFooter =
+        @"import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 fig, ax = plt.subplots()
@@ -89,8 +99,23 @@ plt.legend()
 plt.show()
 ";
 
-	// Todo: Set this to be the actual python path:
-	const string PythonPath = @"C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python36_64\python.exe";
+    // Todo: Set this to be the actual python path:
+    static readonly string[] PythonPaths = 
+    {
+        @"C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python36_64\python.exe",
+        @"C:\Python36\python.exe"
+    };
+
+    static string FindPython()
+    {
+        foreach (var s in PythonPaths)
+        {
+            if (File.Exists(s))
+                return s;
+        }
+        Debug.Log("Failed to find Python.exe.");
+        return "<Python not found>";
+    }
 
 	delegate double GetValue(Data data);
 	void MakeValueString(StringBuilder sb, string name, GetValue get_value)
@@ -145,11 +170,12 @@ plt.show()
 
 			writer.Write(PythonFooter);
 		}
-		Debug.Log(string.Format("Using Python comand line: \"{0}\" \"{1}\"", PythonPath, fname));
 
+        var pypath = FindPython();
+		Debug.Log(string.Format("Using Python command line: \"{0}\" \"{1}\"", pypath, fname));
 
 		System.Diagnostics.Process p = new System.Diagnostics.Process();
-		p.StartInfo.FileName = PythonPath;
+		p.StartInfo.FileName = pypath;
 		p.StartInfo.Arguments = fname;
 		p.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
 		p.Start();
