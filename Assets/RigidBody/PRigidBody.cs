@@ -24,12 +24,12 @@ public class PRigidBody : MonoBehaviour
 	public bool ApplyAdjustment = false;
 	#endregion
 
-	// Size of the intertia eillipsoid:
+	// Size of the inertia ellipsoid:
 	[HideInInspector]
 	DVector3 Extents;
 
-	// Diagonal values of the interia tensor:
-	[HideInInspector]
+    // Diagonal values of the inertia tensor:
+    [HideInInspector]
 	public DVector3 I;
 
 	// Angular velocity used when simulation was last reset:
@@ -115,7 +115,7 @@ public class PRigidBody : MonoBehaviour
 		DVector3 body_omega_dt = new DVector3();
 		// Euler's equations for torque free motion.
 		// Even the the Unity coordinate system is left-handed, this still works.
-		// Uses explicity Euler integration...
+		// Uses explicit Euler integration...
 		body_omega_dt.x = (I.y - I.z) * body_omega.y * body_omega.z / I.x;
 		body_omega_dt.y = (I.z - I.x) * body_omega.z * body_omega.x / I.y;
 		body_omega_dt.z = (I.x - I.y) * body_omega.x * body_omega.y / I.z;
@@ -162,13 +162,34 @@ public class PRigidBody : MonoBehaviour
 		return inertia;
 	}
 
-	static DVector3 ExtentsFromInertia(DVector3 inertia)
+	static bool ExtentsFromInertia(DVector3 inertia, out DVector3 extents)
 	{
-		var extents = new DVector3(Math.Sqrt((inertia.y + inertia.z - inertia.x) * 5 /2),
-								Math.Sqrt((inertia.x + inertia.z - inertia.y) * 5 / 2),
-								Math.Sqrt((inertia.x + inertia.y - inertia.z) * 5 / 2)
-							    );
-		return extents;
+        // Note that is very easy to pick inertia values that don't coincide with an ellipsoidal
+        // object.
+        const targ_type min_extent2 = .01f * .01f;
+
+        bool success = true;
+        var ex2 = (inertia.y + inertia.z - inertia.x) * 5 / 2;
+        if (ex2 < min_extent2)
+        {
+            ex2 = min_extent2;
+            success = false;
+        }
+        var ey2 = (inertia.x + inertia.z - inertia.y) * 5 / 2;
+        if (ey2 < min_extent2)
+        {
+            ey2 = min_extent2;
+            success = false;
+        }
+        var ez2 = (inertia.x + inertia.y - inertia.z) * 5 / 2;
+        if (ez2 < min_extent2)
+        {
+            ez2 = min_extent2;
+            success = false;
+        }
+
+        extents = new DVector3(Math.Sqrt(ex2), Math.Sqrt(ey2), Math.Sqrt(ez2) );
+		return success;
 	}
 #endregion
 
@@ -195,8 +216,13 @@ public class PRigidBody : MonoBehaviour
 
 		BodyOmega = InitialOmega; // Initial BTW is identity
 
-		Extents = ExtentsFromInertia(DVector3.FromUnity(inertia));
-		ApplyAdjustment = apply_adjustment;
+		bool b = ExtentsFromInertia(DVector3.FromUnity(inertia), out Extents);
+        if (b)
+            Debug.Assert((InertiaFromExtents(Extents) - DVector3.FromUnity(inertia)).magnitude < .001f);
+        else
+            Debug.Log(("Requested inertia values don't correspond to an ellipsoid object."));
+
+        ApplyAdjustment = apply_adjustment;
 
 		transform.localScale = DVector3.ToUnity(Extents);
 
@@ -207,7 +233,7 @@ public class PRigidBody : MonoBehaviour
 
 		Debug.Log(string.Format("Inertia Values: ({0},{1},{2})", I.x, I.y, I.z));
 
-		// Intially the body and world coordinates match:
+		// Initially the body and world coordinates match:
 		L.x = I.x * Omega.x;
 		L.y = I.y * Omega.y;
 		L.z = I.z * Omega.z;
@@ -221,18 +247,17 @@ public class PRigidBody : MonoBehaviour
 		DumpParameters();
 
 		BodyParmsChanged?.Invoke();
-	}
+
+    }
 
 
-	// Start is called before the first frame update
-	void Start()
+    // Start is called before the first frame update
+    void Start()
     {
 		DQuaternion.Test();
 
 
 		SetParameters(StartingInertia, StartingOmega, ApplyAdjustment);
-
-		Debug.Assert((InertiaFromExtents(Extents) - DVector3.FromUnity(StartingInertia)).magnitude < .001f);
 	}
 
 	private void DumpParameters()

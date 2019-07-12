@@ -25,5 +25,5 @@ Depending on the initial anglular momentim and the inertia tensor, this motion m
 
 Some good values to see the rolling of the ellipsoid of inertia on the invariable plane are:
 
-I_x = 1		I_y = 2, I_z = 4
+I_x = .6	I_y = 2, I_z = 2.5
 w_x = 1.5	w_y = 2, w_z = .1
