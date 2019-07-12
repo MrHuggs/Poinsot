@@ -296,17 +296,17 @@ public class PRigidBody : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		// Some experimentation suggests .001 is the largest stepsize we can use.
-		// .0001 doesn't seem to produce difference results
-		// .01 givens significantly different ones.
+		// Some experimentation suggests .001 is the largest stepsize we can use with explicit Euler.
+		//      .0001 doesn't seem to produce differenct results
+		//      .01 givens significantly different ones.
 		// If we use the Runge-Kutta integrator, .01 works just fine...
-		const targ_type target_dt = .001f;
+		const targ_type target_dt = .01f;
 		for (targ_type elapsed = 0; elapsed < Time.fixedDeltaTime; elapsed += target_dt)
 		{
 			// Explicit Euler integrator:
-			UpdateOmega(target_dt);
+			//UpdateOmega(target_dt);
 			// Runge-Kutta integrator:
-			//UpdateOmegaRK(target_dt);
+			UpdateOmegaRK(target_dt);
 			UpdateOrientation(target_dt);
 		}
 		Normalize();
